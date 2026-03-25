@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { businesses, categories } from '../constants';
+import { categories } from '../constants';
 import type { Business } from '../types';
 import { Star, Grid3x3, List, MapPin, CheckCircle, ArrowLeft } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
@@ -67,7 +67,11 @@ interface BusinessDirectoryProps {
 export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFilter, onBack }) => {
   const [filters, setFilters] = useState({ category: initialFilter?.categoryId || 'all', rating: 0 });
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [directoryBusinesses, setDirectoryBusinesses] = useState<Business[]>(businesses);
+  const [directoryBusinesses, setDirectoryBusinesses] = useState<Business[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const { t } = useTranslations();
 
   useEffect(() => {
@@ -76,10 +80,15 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
 
   useEffect(() => {
     const fetchBusinesses = async () => {
-      const { data, error } = await getVerifiedBusinesses();
+      setIsLoading(true);
+      setFetchError(null);
+
+      const { data, error } = await getVerifiedBusinesses({ page, pageSize: 50 });
 
       if (error || !data) {
-        console.error('Failed to fetch verified businesses:', error);
+        console.error('Failed to fetch businesses:', error);
+        setFetchError(error?.message || 'Failed to load businesses from Supabase.');
+        setIsLoading(false);
         return;
       }
 
@@ -96,11 +105,13 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
         imageUrl: business.postcard?.image_url || business.location?.image_url || undefined,
       }));
 
-      setDirectoryBusinesses(normalizedBusinesses);
+      setDirectoryBusinesses((prev) => (page === 0 ? normalizedBusinesses : [...prev, ...normalizedBusinesses]));
+      setHasMore(data.length === 50);
+      setIsLoading(false);
     };
 
     fetchBusinesses();
-  }, []);
+  }, [page]);
 
   const filteredBusinesses = useMemo(() => {
     return directoryBusinesses.filter(business => {
@@ -162,8 +173,26 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
                 <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-primary' : 'hover:bg-white/10'}`}><List className="w-5 h-5 text-white" /></button>
               </div>
             </div>
+            {fetchError && (
+              <GlassCard className="mb-6 p-4 border border-red-400/40 bg-red-500/10">
+                <p className="text-red-200 text-sm">{fetchError}</p>
+              </GlassCard>
+            )}
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' : 'space-y-4'}>
               {filteredBusinesses.map((business) => (<BusinessCard key={business.id} business={business} viewMode={viewMode} />))}
+            </div>
+            <div className="mt-6 flex justify-center">
+              {hasMore ? (
+                <button
+                  onClick={() => setPage((prev) => prev + 1)}
+                  disabled={isLoading}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold disabled:opacity-50"
+                >
+                  {isLoading ? 'Loading...' : 'Load more'}
+                </button>
+              ) : (
+                <p className="text-white/60 text-sm">No more businesses to load.</p>
+              )}
             </div>
           </div>
         </div>

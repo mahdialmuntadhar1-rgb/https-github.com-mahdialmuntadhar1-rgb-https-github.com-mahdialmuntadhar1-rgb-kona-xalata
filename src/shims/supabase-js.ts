@@ -38,6 +38,14 @@ class QueryBuilder<T = Record<string, unknown>> implements PromiseLike<{ data: T
     return this;
   }
 
+  range(from: number, to: number) {
+    const safeFrom = Math.max(0, from);
+    const safeTo = Math.max(safeFrom, to);
+    this.filters.push(`offset=${safeFrom}`);
+    this.filters.push(`limit=${safeTo - safeFrom + 1}`);
+    return this;
+  }
+
   then<TResult1 = { data: T[] | null; error: Error | null }, TResult2 = never>(
     onfulfilled?: ((value: { data: T[] | null; error: Error | null }) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,

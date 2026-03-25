@@ -10,15 +10,23 @@ const SUPABASE_ANON =
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-// Fetch only verified city-center businesses
-export const getVerifiedBusinesses = async (governorate?: string) => {
+export const getVerifiedBusinesses = async ({
+  governorate,
+  page = 0,
+  pageSize = 50,
+}: {
+  governorate?: string;
+  page?: number;
+  pageSize?: number;
+} = {}) => {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
   let query = supabase
     .from('businesses')
-    .select('id, business_id, name, phone, city, governorate, category, address, contact, location, postcard, verified, verification_status, city_center_only, created_at')
-    .eq('verification_status', 'verified')
-    .eq('city_center_only', true)
+    .select('*')
     .order('created_at', { ascending: false })
-    .limit(50);
+    .range(from, to);
 
   if (governorate) {
     query = query.ilike('city', `%${governorate}%`);

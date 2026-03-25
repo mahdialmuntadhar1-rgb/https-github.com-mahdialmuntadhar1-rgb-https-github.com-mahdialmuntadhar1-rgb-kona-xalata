@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { businesses } from '../constants';
 import type { Business } from '../types';
 import { Crown, Star, MapPin, Clock } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
@@ -9,18 +8,20 @@ import { getVerifiedBusinesses } from '../src/lib/supabase';
 
 export const FeaturedBusinesses: React.FC = () => {
   const { t } = useTranslations();
-  const [featuredBusinesses, setFeaturedBusinesses] = useState<Business[]>(
-    businesses.filter((b) => b.isFeatured || b.isPremium),
-  );
+  const [featuredBusinesses, setFeaturedBusinesses] = useState<Business[]>([]);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchFeaturedBusinesses = async () => {
-      const { data, error } = await getVerifiedBusinesses();
+      const { data, error } = await getVerifiedBusinesses({ page: 0, pageSize: 50 });
 
       if (error || !data) {
         console.error('Failed to fetch featured businesses:', error);
+        setFetchError(error?.message || 'Failed to load featured businesses from Supabase.');
         return;
       }
+
+      setFetchError(null);
 
       const normalizedBusinesses: Business[] = data.slice(0, 12).map((business) => ({
         id: business.id,
@@ -49,6 +50,11 @@ export const FeaturedBusinesses: React.FC = () => {
         <h2 className="text-3xl font-bold text-white mb-8 text-center">
           {t('featured.title')}
         </h2>
+        {fetchError && (
+          <GlassCard className="mb-6 p-4 border border-red-400/40 bg-red-500/10">
+            <p className="text-red-200 text-sm">{fetchError}</p>
+          </GlassCard>
+        )}
         <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
           {featuredBusinesses.map((business) => {
             const displayName = getBusinessName(business.name);
