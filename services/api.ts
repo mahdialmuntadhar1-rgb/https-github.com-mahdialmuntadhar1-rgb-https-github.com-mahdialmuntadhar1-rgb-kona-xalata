@@ -7,7 +7,6 @@ import {
     orderBy,
     serverTimestamp,
     doc,
-    getDoc,
     setDoc,
     getDocFromServer,
     Timestamp
@@ -38,6 +37,16 @@ interface JourneyResponse {
 interface TaglineResponse {
   tagline: string;
 }
+
+interface UpsertUserProfileResponse {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  role: 'owner' | 'user' | 'admin';
+  businessId?: string;
+}
+
 
 interface FirestoreErrorInfo {
   error: string;
@@ -83,7 +92,7 @@ export const api = {
         return result.data;
     },
 
-    async getBusinesses(params: { category?: string; city?: string; limit?: number } = {}) {
+    async getBusinesses(params: { category?: string; city?: string; page?: number; limit?: number } = {}) {
         const path = 'businesses';
         try {
             let q = query(collection(db, path), orderBy('name'));
@@ -93,7 +102,8 @@ export const api = {
             }
 
             const pageSize = params.limit || 50;
-            q = query(q, limit(pageSize));
+            const page = Math.max(1, params.page || 1);
+            q = query(q, limit(pageSize * page));
 
             const snapshot = await getDocs(q);
             let data = snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as Business));
@@ -104,14 +114,18 @@ export const api = {
             }
 
             if (data.length === 0) {
+                const start = (page - 1) * pageSize;
                 return {
-                    data: mockBusinesses.slice(0, pageSize),
+                    data: mockBusinesses.slice(start, start + pageSize),
                     total: mockBusinesses.length
                 };
             }
 
+            const start = (page - 1) * pageSize;
+            const paginated = data.slice(start, start + pageSize);
+
             return {
-                data,
+                data: paginated,
                 total: data.length
             };
         } catch (error) {
@@ -162,24 +176,19 @@ export const api = {
 
         const path = `users/${auth.currentUser.uid}`;
         try {
-            const userDocRef = doc(db, 'users', auth.currentUser.uid);
-            const userDoc = await getDoc(userDocRef);
+            const call = httpsCallable<
+                { preferredRole: 'user' | 'owner'; email: string; name?: string | null; avatar?: string | null },
+                UpsertUserProfileResponse
+            >(functions, 'upsertUserProfile');
 
-            if (userDoc.exists()) {
-                return userDoc.data() as User;
-            }
-
-            const newUser: User = {
-                id: auth.currentUser.uid,
-                name: auth.currentUser.displayName || email.split('@')[0],
+            const result = await call({
+                preferredRole,
                 email: auth.currentUser.email || email,
-                avatar: auth.currentUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser.uid}`,
-                role: preferredRole,
-                businessId: preferredRole === 'owner' ? `b_${auth.currentUser.uid}` : undefined
-            };
+                name: auth.currentUser.displayName,
+                avatar: auth.currentUser.photoURL
+            });
 
-            await setDoc(userDocRef, newUser);
-            return newUser;
+            return result.data as User;
         } catch (error) {
             handleFirestoreError(error, OperationType.WRITE, path);
             return null;

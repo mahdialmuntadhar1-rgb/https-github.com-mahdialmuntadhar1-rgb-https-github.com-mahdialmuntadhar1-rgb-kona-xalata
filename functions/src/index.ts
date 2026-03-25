@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/https';
 import { defineSecret } from 'firebase-functions/params';
 
@@ -7,6 +8,22 @@ initializeApp();
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 10;
+
+
+const db = getFirestore();
+
+type UserRole = 'user' | 'owner' | 'admin';
+
+type UserProfile = {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  role: UserRole;
+  businessId?: string;
+  createdAt?: FieldValue;
+  updatedAt?: FieldValue;
+};
 
 type RateLimitBucket = {
   count: number;
@@ -138,3 +155,71 @@ export const generateBusinessTagline = onCall(
     };
   }
 );
+
+
+export const upsertUserProfile = onCall(async (request) => {
+  const uid = ensureAuthenticated(request.auth?.uid);
+
+  const preferredRoleRaw = sanitizeText(String(request.data?.preferredRole ?? 'user'), 20).toLowerCase();
+  const preferredRole: UserRole = preferredRoleRaw === 'owner' ? 'owner' : 'user';
+
+  const authToken = request.auth?.token as Record<string, unknown> | undefined;
+  const isAdmin = authToken?.admin === true;
+
+  const email = sanitizeText(String(request.auth?.token?.email ?? request.data?.email ?? ''), 200);
+  if (!email) {
+    throw new HttpsError('invalid-argument', 'A valid email is required.');
+  }
+
+  const name = sanitizeText(String(request.data?.name ?? request.auth?.token?.name ?? email.split('@')[0]), 120);
+  const avatar = sanitizeText(
+    String(
+      request.data?.avatar ??
+        request.auth?.token?.picture ??
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}`
+    ),
+    400
+  );
+
+  const profileRef = db.collection('users').doc(uid);
+  const existingSnapshot = await profileRef.get();
+
+  if (!existingSnapshot.exists) {
+    const role: UserRole = isAdmin ? 'admin' : preferredRole;
+    const profile: UserProfile = {
+      id: uid,
+      name,
+      email,
+      avatar,
+      role,
+      businessId: role === 'owner' ? `b_${uid}` : undefined,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
+    };
+
+    await profileRef.set(profile);
+    return { ...profile, createdAt: undefined, updatedAt: undefined };
+  }
+
+  const existing = existingSnapshot.data() as UserProfile;
+  const profile: UserProfile = {
+    id: uid,
+    name: existing.name || name,
+    email: existing.email || email,
+    avatar: existing.avatar || avatar,
+    role: isAdmin ? 'admin' : (existing.role || 'user'),
+    businessId: existing.businessId,
+    updatedAt: FieldValue.serverTimestamp()
+  };
+
+  await profileRef.set(profile, { merge: true });
+
+  return {
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    avatar: profile.avatar,
+    role: profile.role,
+    businessId: profile.businessId
+  };
+});
