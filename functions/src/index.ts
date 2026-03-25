@@ -1,8 +1,10 @@
 import { initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/https';
 import { defineSecret } from 'firebase-functions/params';
 
 initializeApp();
+const adminDb = getFirestore();
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -42,6 +44,10 @@ function ensureAuthenticated(uid?: string): string {
   }
 
   return uid;
+}
+
+function sanitizeRole(input: unknown): 'user' | 'owner' {
+  return input === 'owner' ? 'owner' : 'user';
 }
 
 async function generateGeminiText(apiKey: string, prompt: string): Promise<string> {
@@ -138,3 +144,38 @@ export const generateBusinessTagline = onCall(
     };
   }
 );
+
+export const ensureUserProfile = onCall(async (request) => {
+  const uid = ensureAuthenticated(request.auth?.uid);
+  const userRef = adminDb.collection('users').doc(uid);
+  const existing = await userRef.get();
+
+  if (existing.exists) {
+    return existing.data();
+  }
+
+  const email = sanitizeText(String(request.auth?.token?.email ?? ''), 254);
+  if (!email) {
+    throw new HttpsError('invalid-argument', 'Authenticated user must include an email.');
+  }
+
+  const preferredRole = sanitizeRole(request.data?.preferredRole);
+  const displayName = sanitizeText(
+    String(request.auth?.token?.name ?? request.data?.displayName ?? email.split('@')[0]),
+    100
+  );
+  const photoUrl = sanitizeText(String(request.auth?.token?.picture ?? request.data?.photoURL ?? ''), 1000);
+
+  const newUser = {
+    id: uid,
+    name: displayName || email.split('@')[0],
+    email,
+    avatar: photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}`,
+    role: preferredRole,
+    businessId: preferredRole === 'owner' ? `b_${uid}` : null
+  };
+
+  await userRef.set(newUser);
+
+  return newUser;
+});

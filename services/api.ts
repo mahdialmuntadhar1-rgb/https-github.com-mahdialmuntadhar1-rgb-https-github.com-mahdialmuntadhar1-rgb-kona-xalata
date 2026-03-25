@@ -7,7 +7,6 @@ import {
     orderBy,
     serverTimestamp,
     doc,
-    getDoc,
     setDoc,
     getDocFromServer,
     Timestamp
@@ -37,6 +36,12 @@ interface JourneyResponse {
 
 interface TaglineResponse {
   tagline: string;
+}
+
+interface EnsureUserProfileInput {
+  preferredRole: 'user' | 'owner';
+  displayName?: string;
+  photoURL?: string;
 }
 
 interface FirestoreErrorInfo {
@@ -83,7 +88,7 @@ export const api = {
         return result.data;
     },
 
-    async getBusinesses(params: { category?: string; city?: string; limit?: number } = {}) {
+    async getBusinesses(params: { category?: string; city?: string; limit?: number; page?: number } = {}) {
         const path = 'businesses';
         try {
             let q = query(collection(db, path), orderBy('name'));
@@ -160,26 +165,15 @@ export const api = {
     async login(email: string, preferredRole: 'user' | 'owner' = 'user') {
         if (!auth.currentUser) return null;
 
-        const path = `users/${auth.currentUser.uid}`;
+        const path = 'ensureUserProfile';
         try {
-            const userDocRef = doc(db, 'users', auth.currentUser.uid);
-            const userDoc = await getDoc(userDocRef);
-
-            if (userDoc.exists()) {
-                return userDoc.data() as User;
-            }
-
-            const newUser: User = {
-                id: auth.currentUser.uid,
-                name: auth.currentUser.displayName || email.split('@')[0],
-                email: auth.currentUser.email || email,
-                avatar: auth.currentUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser.uid}`,
-                role: preferredRole,
-                businessId: preferredRole === 'owner' ? `b_${auth.currentUser.uid}` : undefined
-            };
-
-            await setDoc(userDocRef, newUser);
-            return newUser;
+            const call = httpsCallable<EnsureUserProfileInput, User>(functions, 'ensureUserProfile');
+            const result = await call({
+                preferredRole,
+                displayName: auth.currentUser.displayName || email.split('@')[0],
+                photoURL: auth.currentUser.photoURL || undefined
+            });
+            return result.data;
         } catch (error) {
             handleFirestoreError(error, OperationType.WRITE, path);
             return null;
