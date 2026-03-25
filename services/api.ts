@@ -12,7 +12,8 @@ import {
     getDocFromServer,
     Timestamp
 } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, auth, functions } from '../firebase';
 import { businesses as mockBusinesses } from '../constants';
 import type { Business, Post, User, BusinessPostcard } from '../types';
 
@@ -23,6 +24,19 @@ export enum OperationType {
   LIST = 'list',
   GET = 'get',
   WRITE = 'write',
+}
+
+
+
+interface JourneyResponse {
+  waypoints: Array<{
+    name: string;
+    address: string;
+  }>;
+}
+
+interface TaglineResponse {
+  tagline: string;
 }
 
 interface FirestoreErrorInfo {
@@ -56,6 +70,19 @@ async function testConnection() {
 testConnection();
 
 export const api = {
+
+    async generateJourney(queryText: string): Promise<JourneyResponse> {
+        const call = httpsCallable<{ query: string }, JourneyResponse>(functions, 'generateJourney');
+        const result = await call({ query: queryText });
+        return result.data;
+    },
+
+    async generateBusinessTagline(input: { businessName: string; city: string; reviews: string }): Promise<TaglineResponse> {
+        const call = httpsCallable<typeof input, TaglineResponse>(functions, 'generateBusinessTagline');
+        const result = await call(input);
+        return result.data;
+    },
+
     async getBusinesses(params: { category?: string; city?: string; limit?: number } = {}) {
         const path = 'businesses';
         try {
