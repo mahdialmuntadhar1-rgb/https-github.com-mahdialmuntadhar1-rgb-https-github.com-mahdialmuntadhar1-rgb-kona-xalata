@@ -231,8 +231,8 @@ export const api = {
             return { success: false, error: 'Caption is required.' };
         }
 
-        if (!isSafeHttpUrl(postData.imageUrl)) {
-            return { success: false, error: 'Image URL must be a valid http/https URL.' };
+        if (postData.imageUrl && !isSafeHttpUrl(postData.imageUrl)) {
+            return { success: false, error: 'Image URL must be valid http/https.' };
         }
 
         try {
