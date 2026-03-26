@@ -1,4 +1,4 @@
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel } from '../src/lib/supabase';
 import { supabase } from './supabase';
 import type { Business, Post, User, BusinessPostcard } from '../types';
 import { logger } from './logger';

@@ -8,6 +8,7 @@ import { GlassCard } from './GlassCard';
 import { BusinessDetailsModal } from './BusinessDetailsModal';
 
 interface BusinessCardProps {
+  key?: string | number;
   business: Business;
   viewMode: 'grid' | 'list';
   onViewDetails: (businessId: string | number) => void;

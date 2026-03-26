@@ -58,7 +58,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
 };
 
 export const useTranslations = (): TranslationContextType => {
-    const context = useContext(TranslationContext);
+    const context = useContext(TranslationContext) as TranslationContextType | undefined;
     if (!context) {
         throw new Error('useTranslations must be used within a TranslationProvider');
     }
