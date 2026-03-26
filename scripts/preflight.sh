@@ -1,33 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TARGET_ENV="${1:-dev}"
-
-if ! command -v firebase >/dev/null 2>&1; then
-  echo "Firebase CLI is not installed. Install with: npm i -g firebase-tools"
-  exit 1
-fi
-
 echo "Running lint..."
 npm run lint
 
 echo "Running build..."
 npm run build
 
-ACTIVE_PROJECT="$(firebase use 2>/dev/null | sed -n 's/^.*active project: \([^)]*\)).*$/\1/p')"
-EXPECTED_PROJECT="$(node -e "const fs=require('fs');const rc=JSON.parse(fs.readFileSync('.firebaserc','utf8'));const target='${TARGET_ENV}';const p=(rc.projects&&rc.projects[target])||'';process.stdout.write(p);")"
+required_vars=(
+  VITE_SUPABASE_URL
+  VITE_SUPABASE_ANON_KEY
+  VITE_CLOUDFLARE_ACCOUNT_ID
+  VITE_CLOUDFLARE_PROJECT_NAME
+)
 
-if [[ -z "${EXPECTED_PROJECT}" ]]; then
-  echo "No project alias found for '${TARGET_ENV}' in .firebaserc"
+missing=0
+for var in "${required_vars[@]}"; do
+  if [[ -z "${!var:-}" ]]; then
+    echo "Missing required env var: ${var}"
+    missing=1
+  fi
+done
+
+if [[ "${missing}" -ne 0 ]]; then
+  echo "Preflight failed due to missing Supabase/Cloudflare environment variables."
   exit 1
 fi
 
-if [[ "${ACTIVE_PROJECT}" != "${EXPECTED_PROJECT}" ]]; then
-  echo "Active Firebase project mismatch."
-  echo "Expected (${TARGET_ENV}): ${EXPECTED_PROJECT}"
-  echo "Active: ${ACTIVE_PROJECT:-<none>}"
-  echo "Run: firebase use ${TARGET_ENV}"
-  exit 1
-fi
-
-echo "Preflight checks passed for '${TARGET_ENV}' (${EXPECTED_PROJECT})."
+echo "Preflight checks passed for Supabase + Cloudflare architecture."

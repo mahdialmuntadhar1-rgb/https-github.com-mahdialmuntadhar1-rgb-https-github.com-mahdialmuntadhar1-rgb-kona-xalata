@@ -18,8 +18,7 @@ import { GovernorateFilter } from './components/GovernorateFilter';
 import { SearchPortal } from './components/SearchPortal';
 import { mockUser } from './constants';
 import { api } from './services/api';
-import { auth } from './firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { supabase } from './services/supabase';
 import type { User, Category, Subcategory, Post } from './types';
 import { TranslationProvider } from './hooks/useTranslations';
 
@@ -84,11 +83,35 @@ const MainContent: React.FC = () => {
   });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Retrieve the role from sessionStorage if it was set during the AuthModal flow
+    let isMounted = true;
+
+    const hydrateSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!isMounted) return;
+
+      if (session?.user) {
         const pendingRole = sessionStorage.getItem('pending_role') as 'user' | 'owner' | null;
-        const user = await api.getOrCreateProfile(firebaseUser, pendingRole || 'user');
+        const user = await api.getOrCreateProfile(session.user, pendingRole || 'user');
+        if (!isMounted) return;
+        setCurrentUser(user);
+        setIsLoggedIn(!!user);
+        sessionStorage.removeItem('pending_role');
+      } else {
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+      }
+      setIsAuthReady(true);
+    };
+
+    hydrateSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
+
+      if (session?.user) {
+        const pendingRole = sessionStorage.getItem('pending_role') as 'user' | 'owner' | null;
+        const user = await api.getOrCreateProfile(session.user, pendingRole || 'user');
+        if (!isMounted) return;
         setCurrentUser(user);
         setIsLoggedIn(!!user);
         sessionStorage.removeItem('pending_role');
@@ -99,7 +122,10 @@ const MainContent: React.FC = () => {
       setIsAuthReady(true);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -130,7 +156,7 @@ const MainContent: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     setIsLoggedIn(false);
     setCurrentUser(null);
     setPage('home');
