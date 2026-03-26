@@ -17,8 +17,7 @@ import { SubcategoryModal } from './components/SubcategoryModal';
 import { GovernorateFilter } from './components/GovernorateFilter';
 import { SearchPortal } from './components/SearchPortal';
 import { api } from './services/api';
-import { auth } from './firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { supabase } from './services/supabase';
 import type { User, Category, Subcategory, Post } from './types';
 import { TranslationProvider } from './hooks/useTranslations';
 import { subscribeToNewPosts } from './services/feed';
@@ -80,9 +79,10 @@ const MainContent: React.FC = () => {
   }, [currentPath]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const user = await api.login(firebaseUser.email || '', 'user');
+    supabase.auth.getSession().then(async ({ data }) => {
+      const sessionUser = data.session?.user;
+      if (sessionUser) {
+        const user = await api.login(sessionUser.email || '', 'user');
         setCurrentUser(user);
         setIsLoggedIn(true);
       } else {
@@ -92,7 +92,19 @@ const MainContent: React.FC = () => {
       setIsAuthReady(true);
     });
 
-    return () => unsubscribe();
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const user = await api.login(session.user.email || '', 'user');
+        setCurrentUser(user);
+        setIsLoggedIn(true);
+      } else {
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+      }
+      setIsAuthReady(true);
+    });
+
+    return () => authListener.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -146,7 +158,8 @@ const MainContent: React.FC = () => {
   };
 
   const handleLogin = async (email: string, role: 'user' | 'owner') => {
-    if (auth.currentUser) {
+    const { data } = await supabase.auth.getUser();
+    if (data.user) {
       const user = await api.login(email, role);
       setCurrentUser(user);
       setIsLoggedIn(true);
@@ -155,7 +168,7 @@ const MainContent: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     setIsLoggedIn(false);
     setCurrentUser(null);
     goTo('/');

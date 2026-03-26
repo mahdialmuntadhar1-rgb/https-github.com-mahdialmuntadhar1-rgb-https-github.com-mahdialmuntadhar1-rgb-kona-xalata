@@ -1,13 +1,11 @@
-import {
-  doc,
-  getDoc,
-  setDoc,
-} from 'firebase/firestore';
-import { db, auth } from '../firebase';
 import type { Post, User, BusinessPostcard } from '../types';
 import { fetchBusinesses } from './businesses';
 import { fetchLatestPosts, } from './feed';
-import { supabaseRest } from './supabase';
+import { supabase, supabaseRest } from './supabase';
+
+function normalizeUserRole(role: unknown): User['role'] {
+  return role === 'owner' || role === 'admin' ? role : 'user';
+}
 
 export const api = {
   fetchBusinesses,
@@ -35,29 +33,32 @@ export const api = {
   },
 
   async login(email: string, role: 'user' | 'owner') {
-    if (!auth.currentUser) return null;
+    const { data: userData } = await supabase.auth.getUser();
+    const authUser = userData.user;
 
-    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+    if (!authUser) return null;
 
-    if (userDoc.exists()) {
-      const userData = userDoc.data() as User;
-      if (!userData.role) {
-        userData.role = role;
-      }
-      return userData;
+    const existingRole = normalizeUserRole(authUser.user_metadata?.role);
+    if (!authUser.user_metadata?.role || (role === 'owner' && existingRole !== 'owner' && existingRole !== 'admin')) {
+      await supabase.auth.updateUser({
+        data: {
+          role,
+        },
+      });
     }
 
-    const newUser: User = {
-      id: auth.currentUser.uid,
-      name: auth.currentUser.displayName || email.split('@')[0],
-      email: auth.currentUser.email || email,
-      avatar: auth.currentUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser.uid}`,
-      role,
-      businessId: role === 'owner' ? `b_${auth.currentUser.uid}` : undefined,
+    const finalRole = role === 'owner' ? 'owner' : existingRole;
+
+    const user: User = {
+      id: authUser.id,
+      name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || email.split('@')[0],
+      email: authUser.email || email,
+      avatar: authUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
+      role: finalRole,
+      businessId: finalRole === 'owner' ? `b_${authUser.id}` : undefined,
     };
 
-    await setDoc(doc(db, 'users', auth.currentUser.uid), newUser);
-    return newUser;
+    return user;
   },
 
   async upsertPostcard(postcard: BusinessPostcard) {
