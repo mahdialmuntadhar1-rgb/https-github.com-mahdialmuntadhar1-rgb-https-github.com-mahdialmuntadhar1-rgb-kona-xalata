@@ -39,54 +39,87 @@ async function handleSupabaseError(error: unknown, operationType: OperationType,
 
 const toDate = (value: string | Date | null | undefined) => (value ? new Date(value) : new Date());
 
+const workerApiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+
+function buildWorkerApiUrl(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  if (workerApiBase) {
+    return `${workerApiBase}${normalizedPath}`;
+  }
+  return normalizedPath;
+}
+
+async function parseWorkerJson<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    throw new Error(`Worker API request failed with status ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+interface WorkerListResponse {
+  data: Business[];
+  meta: {
+    page: number;
+    limit: number;
+    total?: number;
+  };
+}
+
 export const api = {
   async getBusinesses(params: { category?: string; city?: string; governorate?: string; lastDoc?: number; limit?: number; featuredOnly?: boolean; ratingMin?: number } = {}) {
-    const path = 'businesses';
+    const path = '/api/businesses';
     try {
-      const pageSize = params.limit || 20;
+      const limit = params.limit || 20;
       const offset = params.lastDoc || 0;
+      const page = Math.floor(offset / limit) + 1;
 
-      let query = supabase.from(path).select('*', { count: 'exact' }).order('name', { ascending: true });
+      const requestUrl = new URL(buildWorkerApiUrl(path), window.location.origin);
+      requestUrl.searchParams.set('page', String(page));
+      requestUrl.searchParams.set('limit', String(limit));
 
       if (params.category && params.category !== 'all') {
-        query = query.eq('category', params.category);
+        requestUrl.searchParams.set('category', params.category);
       }
 
       if (params.governorate && params.governorate !== 'all') {
-        query = query.eq('governorate', params.governorate);
-      }
-
-      if (params.featuredOnly) {
-        query = query.eq('isFeatured', true);
+        requestUrl.searchParams.set('governorate', params.governorate);
       }
 
       if (params.city?.trim()) {
-        query = query.ilike('city', `%${params.city.trim()}%`);
+        requestUrl.searchParams.set('q', params.city.trim());
       }
 
-      if (params.ratingMin && params.ratingMin > 0) {
-        query = query.gte('rating', params.ratingMin);
-      }
-
-      const { data, error, count } = await query.range(offset, offset + pageSize - 1);
-
-      if (error) {
-        throw error;
-      }
-
-      const normalized = (data || []).map((business: any) => ({
+      const response = await fetch(requestUrl.toString(), { method: 'GET' });
+      const payload = await parseWorkerJson<WorkerListResponse>(response);
+      let normalized = (payload.data || []).map((business: any) => ({
         ...business,
         isVerified: business.isVerified ?? business.verified ?? false,
       })) as Business[];
 
+      if (params.featuredOnly) {
+        normalized = normalized.filter((business) => business.isFeatured === true);
+      }
+
+      if (params.ratingMin && params.ratingMin > 0) {
+        normalized = normalized.filter((business) => (business.rating || 0) >= params.ratingMin!);
+      }
+
+      const totalCount = typeof payload.meta.total === 'number' ? payload.meta.total : normalized.length;
+
       return {
         data: normalized,
         lastDoc: offset + normalized.length,
-        hasMore: typeof count === 'number' ? offset + normalized.length < count : normalized.length === pageSize,
-        totalCount: count ?? normalized.length,
+        hasMore: typeof payload.meta.total === 'number'
+          ? offset + normalized.length < payload.meta.total
+          : normalized.length === limit,
+        totalCount,
       };
     } catch (error) {
-      await handleSupabaseError(error, OperationType.GET, path);
+      logger.error('Worker API businesses request failed', {
+        error: error instanceof Error ? error.message : String(error),
+        operationType: OperationType.GET,
+        path,
+      });
       return { data: [], lastDoc: 0, hasMore: false, totalCount: 0 };
     }
   },

@@ -15,11 +15,10 @@ This app uses a Supabase-first architecture for authentication, data APIs, and r
 2. Create `.env.local` with required variables:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-   - `VITE_AI_API_BASE_URL` (optional, only needed for AI-assisted features)
+   - `VITE_API_BASE_URL` (optional; set to Worker base URL when frontend and Worker are on different hosts)
    - `VITE_CLOUDFLARE_ACCOUNT_ID` (required for deployment workflows)
    - `VITE_CLOUDFLARE_PROJECT_NAME` (required for deployment workflows)
    - `VITE_CLOUDFLARE_WORKER_NAME` (optional; only if your deployment scripts target Workers directly)
-   - `GEMINI_API_KEY` (server-side only; do not expose to the browser bundle)
 3. Run the app:
    `npm run dev`
 
@@ -43,7 +42,7 @@ It validates:
 - Auth: Supabase Auth (Google OAuth)
 - Data: Supabase Postgres tables via `@supabase/supabase-js`
 - Realtime: Supabase channels for social feed updates
-- AI (optional): proxied through a secure backend endpoint (`VITE_AI_API_BASE_URL`)
+- Directory API: Cloudflare Worker routes (`/api/businesses`, `/api/businesses/:id`) proxy to Supabase PostgREST
 - Edge/deploy: Cloudflare
 
 ## Production readiness without AI agents
@@ -95,3 +94,30 @@ The migration includes:
 - core tables (`users`, `businesses`, `posts`, `events`, `deals`, `stories`, `business_postcards`)
 - row level security enabled on all tables
 - policies for public reads, owner writes, and admin-only postcard ingestion
+
+## Worker API validation (curl)
+
+Replace placeholders before running commands:
+- `<worker>`: deployed Worker hostname
+- `<pages-domain>`: deployed frontend hostname
+- `<id>`: existing business record ID
+
+```bash
+# 1) OPTIONS preflight
+curl -i -X OPTIONS https://<worker>/api/businesses \
+  -H "Origin: https://<pages-domain>"
+# Expect: 200/204 + Access-Control-Allow-Origin/Methods/Headers/Max-Age/Vary
+
+# 2) List endpoint
+curl -i "https://<worker>/api/businesses?page=1&limit=10&q=baghdad"
+# Expect: 200 + {"data":[...],"meta":{"page":1,"limit":10,"total":...}}
+
+# 3) Detail endpoint
+curl -i "https://<worker>/api/businesses/<id>"
+# Expect: 200 + {"data":{...}} or 404
+
+# 4) Cache check (run list twice)
+curl -i "https://<worker>/api/businesses?page=1&limit=10&q=baghdad"
+curl -i "https://<worker>/api/businesses?page=1&limit=10&q=baghdad"
+# Expect second response to include X-Cache: HIT (and Cache-Control header present)
+```

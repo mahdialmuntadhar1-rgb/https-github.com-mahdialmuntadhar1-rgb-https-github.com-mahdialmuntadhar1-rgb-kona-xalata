@@ -17,13 +17,11 @@ for var in "${required_vars[@]}"; do
 done
 
 if [[ "${missing}" -ne 0 ]]; then
-  echo "Preflight failed due to missing Supabase/Cloudflare environment variables."
+  echo "Preflight failed due to missing required Supabase/Cloudflare environment variables."
   exit 1
 fi
 
-if [[ -z "${VITE_AI_API_BASE_URL:-}" ]]; then
-  echo "Warning: VITE_AI_API_BASE_URL is not set. AI-assisted features will be disabled."
-fi
+echo "Info: AI-specific env vars are optional and ignored by production preflight checks."
 
 echo "Running lint..."
 npm run lint
@@ -31,4 +29,4 @@ npm run lint
 echo "Running build..."
 npm run build
 
-echo "Preflight checks passed for Supabase + Cloudflare architecture."
+echo "Preflight checks passed for frontend + Cloudflare Worker + Supabase deployment."

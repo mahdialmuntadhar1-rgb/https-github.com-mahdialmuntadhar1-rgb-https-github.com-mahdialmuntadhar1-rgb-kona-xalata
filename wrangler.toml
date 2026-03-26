@@ -1,0 +1,8 @@
+name = "iraq-compass-api"
+main = "worker/src/index.ts"
+compatibility_date = "2026-03-26"
+
+[vars]
+BUSINESSES_TABLE = "businesses"
+CACHE_TTL_SECONDS = "60"
+ALLOWED_ORIGINS = ""
