@@ -38,12 +38,11 @@ export const api = {
     if (!auth.currentUser) return null;
 
     const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-    const isAdminEmail = auth.currentUser.email === 'safari.bosafar@gmail.com';
 
     if (userDoc.exists()) {
       const userData = userDoc.data() as User;
-      if (isAdminEmail) {
-        return { ...userData, role: 'admin' as const };
+      if (!userData.role) {
+        userData.role = role;
       }
       return userData;
     }
@@ -53,7 +52,7 @@ export const api = {
       name: auth.currentUser.displayName || email.split('@')[0],
       email: auth.currentUser.email || email,
       avatar: auth.currentUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser.uid}`,
-      role: isAdminEmail ? 'admin' : role,
+      role,
       businessId: role === 'owner' ? `b_${auth.currentUser.uid}` : undefined,
     };
 

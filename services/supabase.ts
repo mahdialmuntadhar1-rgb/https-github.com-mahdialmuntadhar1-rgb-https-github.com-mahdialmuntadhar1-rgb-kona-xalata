@@ -20,24 +20,38 @@ export async function supabaseRest<T>(path: string, options: RequestInit & Fetch
     throw new Error('Missing Supabase environment variables.');
   }
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
-    ...options,
-    headers: {
-      ...headers,
-      ...(options.headers || {}),
-    },
-  });
+  try {
+    const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+      ...options,
+      headers: {
+        ...headers,
+        ...(options.headers || {}),
+      },
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Supabase request failed (${response.status}): ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Supabase REST request failed', {
+        path,
+        status: response.status,
+        statusText: response.statusText,
+        errorText,
+      });
+      throw new Error(`Supabase request failed (${response.status}). Please try again.`);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    return response.json() as Promise<T>;
+  } catch (error) {
+    console.error('Supabase REST request encountered a network/runtime error', { path, error });
+    if (error instanceof Error) {
+      throw new Error(`Unable to reach Supabase for "${path}": ${error.message}`);
+    }
+    throw new Error(`Unable to reach Supabase for "${path}".`);
   }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
 }
 
 export function buildRealtimeSocket(): WebSocket {
