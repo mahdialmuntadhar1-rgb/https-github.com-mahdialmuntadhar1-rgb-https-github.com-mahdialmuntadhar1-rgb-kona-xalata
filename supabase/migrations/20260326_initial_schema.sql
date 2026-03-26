@@ -165,6 +165,25 @@ for update to authenticated
 using ("ownerId" = auth.uid())
 with check ("ownerId" = auth.uid());
 
+create policy if not exists "owners delete own businesses" on public.businesses
+for delete to authenticated
+using ("ownerId" = auth.uid());
+
+create policy if not exists "admins write businesses" on public.businesses
+for all to authenticated
+using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role = 'admin'
+  )
+)
+with check (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role = 'admin'
+  )
+);
+
 create policy if not exists "owners create posts" on public.posts
 for insert to authenticated
 with check (
