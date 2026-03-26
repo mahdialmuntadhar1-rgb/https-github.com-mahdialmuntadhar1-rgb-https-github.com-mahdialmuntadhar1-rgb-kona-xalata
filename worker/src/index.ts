@@ -3,7 +3,7 @@ interface Env {
   SUPABASE_ANON_KEY: string;
   ALLOWED_ORIGINS?: string;
   CACHE_TTL_SECONDS?: string;
-  BUSINESSES_TABLE?: string;
+  SUPABASE_TABLE?: string;
 }
 
 const DEFAULT_TABLE = 'businesses';
@@ -29,15 +29,14 @@ function getCorsHeaders(request: Request, env: Env): Headers {
   const origin = request.headers.get('Origin');
   const allowlist = getAllowedOrigins(env);
 
-  const allowOrigin =
-    allowlist.length === 0
-      ? '*'
-      : origin && allowlist.includes(origin)
-        ? origin
-        : allowlist[0];
-
   const headers = new Headers();
-  headers.set('Access-Control-Allow-Origin', allowOrigin);
+  if (allowlist.length === 0) {
+    headers.set('Access-Control-Allow-Origin', '*');
+  } else if (origin && allowlist.includes(origin)) {
+    headers.set('Access-Control-Allow-Origin', origin);
+  } else {
+    headers.set('Access-Control-Allow-Origin', 'null');
+  }
   headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
   headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   headers.set('Access-Control-Max-Age', '86400');
@@ -110,7 +109,7 @@ function withCors(request: Request, env: Env, response: Response): Response {
 
 async function proxyBusinessesList(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
-  const table = env.BUSINESSES_TABLE || DEFAULT_TABLE;
+  const table = env.SUPABASE_TABLE || DEFAULT_TABLE;
   const page = parsePositiveInt(url.searchParams.get('page'), 1);
   const limit = parsePositiveInt(url.searchParams.get('limit'), DEFAULT_LIMIT, MAX_LIMIT);
   const from = (page - 1) * limit;
@@ -126,7 +125,7 @@ async function proxyBusinessesList(request: Request, env: Env): Promise<Response
   const category = url.searchParams.get('category')?.trim();
 
   if (q) {
-    supabaseUrl.searchParams.set('or', `name.ilike.*${q}*,city.ilike.*${q}*,description.ilike.*${q}*`);
+    supabaseUrl.searchParams.set('name', `ilike.*${q}*`);
   }
 
   if (governorate && governorate !== 'all') {
@@ -164,7 +163,7 @@ async function proxyBusinessesList(request: Request, env: Env): Promise<Response
 }
 
 async function proxyBusinessDetail(request: Request, env: Env, id: string): Promise<Response> {
-  const table = env.BUSINESSES_TABLE || DEFAULT_TABLE;
+  const table = env.SUPABASE_TABLE || DEFAULT_TABLE;
   const supabaseUrl = new URL(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${table}`);
   supabaseUrl.searchParams.set('id', `eq.${id}`);
   supabaseUrl.searchParams.set('select', '*');

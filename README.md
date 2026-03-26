@@ -45,13 +45,9 @@ It validates:
 - Directory API: Cloudflare Worker routes (`/api/businesses`, `/api/businesses/:id`) proxy to Supabase PostgREST
 - Edge/deploy: Cloudflare
 
-## Production readiness without AI agents
+## Production readiness
 
-If you want to ship a real directory product and completely ignore AI agents, this codebase supports that path.
-
-### Current readiness (database-first mode)
-
-With Supabase + Cloudflare configured, the app is broadly in a **~70% launch-ready range** for a non-AI release:
+With Supabase + Cloudflare configured, the app is broadly in a **~70% launch-ready range** for a directory-focused release:
 
 - ✅ Core app shell and feature pages are implemented.
 - ✅ Supabase integration exists for auth and data.
@@ -59,7 +55,7 @@ With Supabase + Cloudflare configured, the app is broadly in a **~70% launch-rea
 - ⚠️ Final readiness depends on verifying your deployed Worker/API routes and production env wiring.
 - ⚠️ Performance hardening (caching, regional tuning, query optimization) is still needed before scale.
 
-### Minimum launch architecture (no AI agents)
+### Minimum launch architecture
 
 Use this simple production shape:
 
@@ -95,29 +91,35 @@ The migration includes:
 - row level security enabled on all tables
 - policies for public reads, owner writes, and admin-only postcard ingestion
 
+## Worker API endpoints
+
+The Cloudflare Worker serves these routes:
+- `OPTIONS /*` (CORS preflight)
+- `GET /api/businesses?q=&governorate=&category=&page=&limit=`
+- `GET /api/businesses/:id`
+
 ## Worker API validation (curl)
 
 Replace placeholders before running commands:
-- `<worker>`: deployed Worker hostname
-- `<pages-domain>`: deployed frontend hostname
+- `<WORKER_URL>`: deployed Worker hostname
+- `<PAGES_DOMAIN>`: deployed frontend hostname
 - `<id>`: existing business record ID
 
 ```bash
-# 1) OPTIONS preflight
-curl -i -X OPTIONS https://<worker>/api/businesses \
-  -H "Origin: https://<pages-domain>"
-# Expect: 200/204 + Access-Control-Allow-Origin/Methods/Headers/Max-Age/Vary
+# 1) Preflight
+curl -i -X OPTIONS "https://<WORKER_URL>/api/businesses" -H "Origin: https://<PAGES_DOMAIN>"
+# Expect: 200/204 and Access-Control-Allow-Origin/Methods/Headers/Max-Age/Vary headers
 
-# 2) List endpoint
-curl -i "https://<worker>/api/businesses?page=1&limit=10&q=baghdad"
-# Expect: 200 + {"data":[...],"meta":{"page":1,"limit":10,"total":...}}
+# 2) List
+curl -i "https://<WORKER_URL>/api/businesses?page=1&limit=10&q=baghdad"
+# Expect: 200 with JSON {data, meta}
 
-# 3) Detail endpoint
-curl -i "https://<worker>/api/businesses/<id>"
-# Expect: 200 + {"data":{...}} or 404
+# 3) Detail
+curl -i "https://<WORKER_URL>/api/businesses/<id>"
+# Expect: 200 {data} or 404 JSON error
 
-# 4) Cache check (run list twice)
-curl -i "https://<worker>/api/businesses?page=1&limit=10&q=baghdad"
-curl -i "https://<worker>/api/businesses?page=1&limit=10&q=baghdad"
-# Expect second response to include X-Cache: HIT (and Cache-Control header present)
+# 4) Cache
+curl -i "https://<WORKER_URL>/api/businesses?page=1&limit=10&q=baghdad"
+curl -i "https://<WORKER_URL>/api/businesses?page=1&limit=10&q=baghdad"
+# Expect: Cache-Control: public, max-age=... and second request should ideally return X-Cache: HIT
 ```

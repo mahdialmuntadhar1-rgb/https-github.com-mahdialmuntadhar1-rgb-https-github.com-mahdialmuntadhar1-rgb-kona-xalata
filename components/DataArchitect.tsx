@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle, X, ShieldCheck, Briefcase, MapPin, Navigation } from './icons';
+import { Sparkles, CheckCircle, X, ShieldCheck, Briefcase, Navigation } from './icons';
 import { GlassCard } from './GlassCard';
 import { api } from '../services/api';
 import type { BusinessPostcard } from '../types';
-import { aiApi } from '../services/ai';
 import { logger } from '../services/logger';
 
 const GOVERNORATES = [
@@ -110,22 +109,10 @@ export const DataArchitect: React.FC = () => {
         const city = selectedGovernorate; // Governorate capital logic simplified for this demo
 
         // STEP 4: POSTCARD GENERATION
-        addLog(`Generating AI tagline for ${name}...`);
+        addLog(`Generating tagline for ${name}...`);
         const topReviews = reviews.slice(0, 3).map((r: RawReview) => r.text || '').filter(Boolean);
-        
-        let tagline = `${name} in ${city}`;
-        try {
-            const generatedTagline = await aiApi.generateTagline(name, topReviews);
-            if (generatedTagline) {
-              tagline = generatedTagline.replace(/^"|"$/g, '');
-            }
-        } catch (err) {
-            logger.warn('AI tagline generation failed, falling back to default tagline', {
-              name,
-              governorate: selectedGovernorate,
-              error: err instanceof Error ? err.message : String(err),
-            });
-        }
+        const reviewSnippet = topReviews[0] ? ` • ${topReviews[0].slice(0, 80)}` : '';
+        const tagline = `${name} in ${city}${reviewSnippet}`;
 
         const postcard: BusinessPostcard = {
           title: name,
@@ -178,7 +165,7 @@ export const DataArchitect: React.FC = () => {
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
             <ShieldCheck className="w-6 h-6 text-primary" />
-            AI Data Architect
+            Data Architect
           </h2>
           <p className="text-white/60 text-sm">Collect, verify, and format business data across Iraq.</p>
         </div>

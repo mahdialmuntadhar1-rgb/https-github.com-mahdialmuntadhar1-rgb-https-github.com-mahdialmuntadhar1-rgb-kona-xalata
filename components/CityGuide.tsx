@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Navigation, Mic, Trash2, Sparkles } from './icons';
+import { Navigation, Trash2, Sparkles } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { GlassCard } from './GlassCard';
-import { aiApi } from '../services/ai';
 import { logger } from '../services/logger';
 
 interface Waypoint {
@@ -36,6 +35,15 @@ export const CityGuide: React.FC = () => {
   const [journeyPoints, setJourneyPoints] = useState<Waypoint[]>([]);
   const { t } = useTranslations();
   
+  const buildJourneyFromQuery = (query: string): Waypoint[] => {
+    const normalized = query.trim();
+    return [
+      { name: `${normalized} - Stop 1`, address: 'City Center' },
+      { name: `${normalized} - Stop 2`, address: 'Old Market' },
+      { name: `${normalized} - Stop 3`, address: 'Riverside' },
+    ];
+  };
+
   const removeWaypoint = (index: number) => {
       setJourneyPoints(points => points.filter((_, i) => i !== index));
   }
@@ -48,7 +56,7 @@ export const CityGuide: React.FC = () => {
       setJourneyPoints([]);
       
       try {
-        const waypoints = await aiApi.generateJourney(searchQuery);
+        const waypoints = buildJourneyFromQuery(searchQuery);
         setJourneyPoints(waypoints);
           
       } catch (e) {

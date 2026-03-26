@@ -1145,7 +1145,7 @@ export const translations = {
             nearYou: "Near You",
             friendsGoing: "Friends Going"
         },
-        aiPick: "AI Pick",
+        aiPick: "Staff Pick",
         going: "going",
         free: "FREE",
         viewDetails: "View Details",
@@ -1157,7 +1157,7 @@ export const translations = {
         claimNow: "Claim Now",
     },
     cityGuide: {
-        title: "AI-Powered City Guide",
+        title: "City Guide",
         planJourney: "Plan Your Journey",
         searchPlaces: "e.g., a one-day trip in Baghdad",
         generateJourney: "Generate",
@@ -1487,7 +1487,7 @@ export const translations = {
             nearYou: "بالقرب منك",
             friendsGoing: "الأصدقاء ذاهبون"
         },
-        aiPick: "اختيار الذكاء الاصطناعي",
+        aiPick: "اختيار الفريق",
         going: "ذاهبون",
         free: "مجاني",
         viewDetails: "عرض التفاصيل",
@@ -1499,7 +1499,7 @@ export const translations = {
         claimNow: "احصل على العرض الآن",
     },
     cityGuide: {
-        title: "دليل المدينة بالذكاء الاصطناعي",
+        title: "دليل المدينة",
         planJourney: "خطط لرحلتك",
         searchPlaces: "مثال: رحلة ليوم واحد في بغداد",
         generateJourney: "إنشاء",
@@ -1829,7 +1829,7 @@ export const translations = {
             nearYou: "نزیک تۆ",
             friendsGoing: "هاوڕێیان دەچن"
         },
-        aiPick: "هەڵبژاردەی AI",
+        aiPick: "هەڵبژاردەی تیم",
         going: "دەچن",
         free: "بێبەرامبەر",
         viewDetails: "بینینی وردەکارییەکان",

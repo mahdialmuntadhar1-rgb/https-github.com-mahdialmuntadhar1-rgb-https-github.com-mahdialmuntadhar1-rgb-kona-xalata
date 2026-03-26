@@ -3,6 +3,6 @@ main = "worker/src/index.ts"
 compatibility_date = "2026-03-26"
 
 [vars]
-BUSINESSES_TABLE = "businesses"
+SUPABASE_TABLE = "businesses"
 CACHE_TTL_SECONDS = "60"
 ALLOWED_ORIGINS = ""

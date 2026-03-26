@@ -21,8 +21,6 @@ if [[ "${missing}" -ne 0 ]]; then
   exit 1
 fi
 
-echo "Info: AI-specific env vars are optional and ignored by production preflight checks."
-
 echo "Running lint..."
 npm run lint
 
