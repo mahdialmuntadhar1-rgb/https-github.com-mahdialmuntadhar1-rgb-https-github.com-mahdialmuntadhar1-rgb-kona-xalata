@@ -1,36 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import React from 'react';
 import type { Deal } from '../types';
 import { Clock, Tag } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 
 export const DealsMarketplace: React.FC = () => {
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { t } = useTranslations();
 
-  useEffect(() => {
-    const fetchDeals = async () => {
-      setIsLoading(true);
-      try {
-        const data = await api.getDeals();
-        setDeals(data);
-      } catch (error) {
-        console.error('Error fetching deals:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchDeals();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="py-16 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const previewDeals: Deal[] = [
+    {
+      id: 1,
+      discount: 20,
+      businessLogo: 'https://picsum.photos/seed/deal-1/120/120',
+      title: 'Weekend Dining Offer',
+      description: 'Preview card only. Verified claims and redemption launch in Phase 2.',
+      expiresIn: 'Coming soon',
+      claimed: 0,
+      total: 100,
+    },
+    {
+      id: 2,
+      discount: 35,
+      businessLogo: 'https://picsum.photos/seed/deal-2/120/120',
+      title: 'Family Stay Bundle',
+      description: 'MVP shows curated examples while partner deal APIs are hardened.',
+      expiresIn: 'Coming soon',
+      claimed: 0,
+      total: 100,
+    },
+  ];
 
   return (
     <section className="py-16 relative">
@@ -39,15 +36,12 @@ export const DealsMarketplace: React.FC = () => {
         <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse animation-delay-3000" />
       </div>
       <div className="container mx-auto px-4 relative z-10">
-        <h2 className="text-3xl font-bold text-white mb-8 text-center">{t('deals.title')}</h2>
+        <h2 className="text-3xl font-bold text-white mb-3 text-center">{t('deals.title')}</h2>
+        <p className="text-center text-sm text-white/70 mb-8">
+          <span className="font-semibold text-accent">Beta preview:</span> Deals discovery is visible, claiming is disabled until Phase 2.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {deals.length === 0 ? (
-            <div className="col-span-full py-12 flex flex-col items-center justify-center text-center opacity-50">
-              <Tag className="w-12 h-12 text-white/20 mb-4" />
-              <p className="text-white/60 text-sm">{t('deals.noDeals') || "No active deals at the moment."}</p>
-            </div>
-          ) : (
-            deals.map((deal) => (
+          {previewDeals.map((deal) => (
             <div key={deal.id} className="relative group backdrop-blur-xl bg-gradient-to-br from-accent/10 to-primary/10 border border-white/10 rounded-2xl p-6 hover:border-accent/50 hover:shadow-glow-accent transition-all duration-300 overflow-hidden text-start">
               <div className="absolute top-0 end-0 w-24 h-24">
                 <div className="absolute top-0 end-0 w-full h-full bg-gradient-to-br from-accent to-primary transform rtl:-rotate-45 ltr:rotate-45 rtl:-translate-x-8 ltr:translate-x-8 -translate-y-8"></div>
@@ -71,12 +65,12 @@ export const DealsMarketplace: React.FC = () => {
                   <div className="h-full bg-gradient-to-r from-accent to-primary transition-all duration-500" style={{ width: `${(deal.claimed / deal.total) * 100}%` }} />
                 </div>
               </div>
-              <button className="w-full py-3 rounded-xl bg-gradient-to-r from-accent to-primary text-white font-semibold hover:shadow-glow-accent transition-all duration-200 flex items-center justify-center gap-2">
+              <button disabled className="w-full py-3 rounded-xl bg-gradient-to-r from-accent to-primary text-white font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                 <Tag className="w-4 h-4" />
-                {t('deals.claimNow')}
+                {t('deals.claimNow')} • Coming Soon
               </button>
             </div>
-          )))}
+          ))}
         </div>
       </div>
     </section>

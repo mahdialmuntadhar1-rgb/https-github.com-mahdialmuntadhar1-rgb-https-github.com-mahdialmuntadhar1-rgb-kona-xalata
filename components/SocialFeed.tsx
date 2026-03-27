@@ -7,12 +7,13 @@ import type { Post } from '../types';
 interface SocialFeedProps {
     posts: Post[];
     isLoading?: boolean;
+    isMvpPreview?: boolean;
     onLike?: (postId: string) => void;
     onComment?: (postId: string) => void;
     onShare?: (postId: string) => void;
 }
 
-export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, onLike, onComment, onShare }) => {
+export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, isMvpPreview = false, onLike, onComment, onShare }) => {
     const { t } = useTranslations();
     const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
 
@@ -24,7 +25,9 @@ export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, onLike
             newLikedPosts.add(postId);
         }
         setLikedPosts(newLikedPosts);
-        onLike?.(postId);
+        if (!isMvpPreview) {
+            onLike?.(postId);
+        }
     };
 
     if (isLoading) {
@@ -50,6 +53,11 @@ export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, onLike
 
     return (
         <div className="space-y-6 max-w-2xl mx-auto">
+            {isMvpPreview && (
+                <div className="rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-white/80">
+                    <span className="font-semibold text-primary">MVP Preview:</span> Social posting, comments, and sharing are planned for Phase 2.
+                </div>
+            )}
             {posts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10">
                     <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
@@ -82,7 +90,10 @@ export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, onLike
                                 <p className="text-xs text-white/50">{post.createdAt.toLocaleString()}</p>
                             </div>
                         </div>
-                        <button className="p-2 rounded-full hover:bg-white/5 text-white/50 transition-colors">
+                        <button
+                            disabled={isMvpPreview}
+                            className="p-2 rounded-full hover:bg-white/5 text-white/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
                             <MoreHorizontal className="w-5 h-5" />
                         </button>
                     </div>
@@ -102,14 +113,16 @@ export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, onLike
                         <div className="flex items-center gap-6">
                             <button 
                                 onClick={() => handleLike(post.id)}
-                                className={`flex items-center gap-2 transition-colors ${likedPosts.has(post.id) ? 'text-accent' : 'text-white/60 hover:text-accent'}`}
+                                disabled={isMvpPreview}
+                                className={`flex items-center gap-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${likedPosts.has(post.id) ? 'text-accent' : 'text-white/60 hover:text-accent'}`}
                             >
                                 <Heart className={`w-5 h-5 ${likedPosts.has(post.id) ? 'fill-current' : ''}`} />
                                 <span className="text-sm font-medium">{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
                             </button>
                             <button 
                                 onClick={() => onComment?.(post.id)}
-                                className="flex items-center gap-2 text-white/60 hover:text-primary transition-colors"
+                                disabled={isMvpPreview}
+                                className="flex items-center gap-2 text-white/60 hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <MessageCircle className="w-5 h-5" />
                                 <span className="text-sm font-medium">{t('social.comments') || "Comments"}</span>
@@ -117,7 +130,8 @@ export const SocialFeed: React.FC<SocialFeedProps> = ({ posts, isLoading, onLike
                         </div>
                         <button 
                             onClick={() => onShare?.(post.id)}
-                            className="flex items-center gap-2 text-white/60 hover:text-secondary transition-colors"
+                            disabled={isMvpPreview}
+                            className="flex items-center gap-2 text-white/60 hover:text-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <Share2 className="w-5 h-5" />
                             <span className="text-sm font-medium">{t('social.share') || "Share"}</span>

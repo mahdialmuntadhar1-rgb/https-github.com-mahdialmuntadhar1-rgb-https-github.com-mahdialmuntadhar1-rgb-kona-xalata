@@ -1,62 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import React from 'react';
 import type { Event } from '../types';
-import { Sparkles, MapPin, Clock, Users, Calendar } from './icons';
+import { Sparkles, MapPin, Clock, Users } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { GlassCard } from './GlassCard';
 
 export const PersonalizedEvents: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('forYou');
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const previewEvents: Event[] = [
+    {
+      id: 1,
+      image: 'https://picsum.photos/seed/event-preview-1/800/600',
+      title: 'Baghdad Community Night (Preview)',
+      aiRecommended: true,
+      date: new Date('2026-06-15T19:00:00Z'),
+      venue: 'Al Mansour District',
+      attendees: 0,
+      price: 0,
+    },
+    {
+      id: 2,
+      image: 'https://picsum.photos/seed/event-preview-2/800/600',
+      title: 'Local Makers Showcase (Preview)',
+      date: new Date('2026-07-05T16:30:00Z'),
+      venue: 'Erbil Art Hall',
+      attendees: 0,
+      price: 0,
+    },
+  ];
   const { t } = useTranslations();
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
-      try {
-        // Map tabs to categories if needed, or just fetch all for now
-        const categoryMap: Record<string, string | undefined> = {
-          'forYou': undefined,
-          'trending': 'entertainment',
-          'nearYou': 'food',
-          'friendsGoing': 'business'
-        };
-        const data = await api.getEvents({ category: categoryMap[activeTab] });
-        setEvents(data);
-      } catch (error) {
-        console.error('Error fetching events:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchEvents();
-  }, [activeTab]);
 
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-white mb-8 text-center">
+        <h2 className="text-3xl font-bold text-white mb-3 text-center">
           {t('events.personalizedTitle')}
         </h2>
+        <p className="text-center text-sm text-white/70 mb-8">
+          <span className="font-semibold text-primary">Beta preview:</span> Event recommendations and RSVP actions are disabled for MVP.
+        </p>
         <div className="flex justify-center gap-3 mb-8 overflow-x-auto scrollbar-hide">
           {['forYou', 'trending', 'nearYou', 'friendsGoing'].map((tab) => (
             <button
               key={tab}
-              className={`flex-shrink-0 px-6 py-3 rounded-full backdrop-blur-xl border transition-all duration-200 ${activeTab === tab ? 'bg-primary border-primary text-white shadow-glow-primary' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'}`}
-              onClick={() => setActiveTab(tab)}
+              disabled
+              className="flex-shrink-0 px-6 py-3 rounded-full backdrop-blur-xl border transition-all duration-200 bg-white/5 border-white/10 text-white/60 cursor-not-allowed"
             >
               {t(`events.tabs.${tab}`)}
             </button>
           ))}
         </div>
 
-        {isLoading ? (
-          <div className="py-16 flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <div key={activeTab} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-grid">
             <style>{`
                 @keyframes fade-in-grid {
                     from { opacity: 0; transform: translateY(1rem); }
@@ -64,13 +57,7 @@ export const PersonalizedEvents: React.FC = () => {
                 }
                 .animate-fade-in-grid { animation: fade-in-grid 0.5s ease-in-out forwards; }
             `}</style>
-            {events.length === 0 ? (
-              <div className="col-span-full py-12 flex flex-col items-center justify-center text-center opacity-50">
-                <Calendar className="w-12 h-12 text-white/20 mb-4" />
-                <p className="text-white/60 text-sm">{t('events.noEvents') || "No events found for this category."}</p>
-              </div>
-            ) : (
-              events.map((event) => (
+              {previewEvents.map((event) => (
                 <GlassCard key={event.id} className="group relative overflow-hidden hover:shadow-glow-primary hover:-translate-y-2 text-start p-0">
                   <div className="relative h-56 overflow-hidden">
                     <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -88,20 +75,18 @@ export const PersonalizedEvents: React.FC = () => {
                   <div className="p-5">
                     <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2">{event.title}</h3>
                     <div className="space-y-2 text-sm text-white/60 mb-4">
-                      <div className="flex items-center gap-2"><MapPin className="w-4 h-4" />{event.venue || event.location}</div>
+                      <div className="flex items-center gap-2"><MapPin className="w-4 h-4" />{event.venue}</div>
                       <div className="flex items-center gap-2"><Clock className="w-4 h-4" />{event.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                      <div className="flex items-center gap-2"><Users className="w-4 h-4" />{event.attendees} {t('events.going')}</div>
+                      <div className="flex items-center gap-2"><Users className="w-4 h-4" />{event.attendees} {t('events.going')} • Preview</div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div><span className="text-secondary font-bold text-xl">{event.price === 0 ? t('events.free') : `${event.price.toLocaleString()} IQD`}</span></div>
-                      <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm hover:shadow-glow-primary transition-all duration-200">{t('events.viewDetails')}</button>
+                      <button disabled className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed">{t('events.viewDetails')} • Coming Soon</button>
                     </div>
                   </div>
                 </GlassCard>
-              ))
-            )}
+              ))}
           </div>
-        )}
       </div>
     </section>
   );

@@ -1,11 +1,9 @@
 import React from 'react';
-import type { User, Post } from '../types';
+import type { User } from '../types';
 import { Heart, Star, MapPin, Clock, Users, ShieldCheck } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { GlassCard } from './GlassCard';
-import { SocialPostBox } from './SocialPostBox';
 import { DataArchitect } from './DataArchitect';
-import { api } from '../services/api';
 
 interface DashboardProps {
     user: User;
@@ -17,6 +15,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     const [activeTab, setActiveTab] = React.useState<'profile' | 'architect'>('profile');
     const [statusMsg, setStatusMsg] = React.useState<{ type: 'success' | 'error', text: string } | null>(null);
     
+    const handleProfileUpdate = (e: React.FormEvent<HTMLFormElement>) => {
     const handleCreatePost = async (postData: Partial<Post>) => {
         try {
             const result = await api.createPost({
@@ -41,21 +40,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const name = formData.get('name') as string;
-        const email = formData.get('email') as string;
-
-        try {
-            const result = await api.updateProfile(user.id, { name, email });
-            if (result.success) {
-                setStatusMsg({ type: 'success', text: 'Profile updated successfully!' });
-                setTimeout(() => setStatusMsg(null), 3000);
-            }
-        } catch (error) {
-            console.error('Error updating profile:', error);
-            setStatusMsg({ type: 'error', text: 'Failed to update profile.' });
-            setTimeout(() => setStatusMsg(null), 3000);
-        }
+        setStatusMsg({ type: 'error', text: 'Profile editing will be enabled in Phase 2.' });
+        setTimeout(() => setStatusMsg(null), 3000);
     };
 
     const recentActivity = [
@@ -130,12 +116,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     {user.role === 'owner' && user.businessId && (
                         <div className="max-w-2xl mx-auto mb-12">
                             <h2 className="text-2xl font-bold text-white mb-6">{t('dashboard.createPost') || "Create a Post"}</h2>
-                            <SocialPostBox 
-                                businessId={user.businessId} 
-                                businessName={user.name} 
-                                businessAvatar={user.avatar} 
-                                onSubmit={handleCreatePost}
-                            />
+                            <GlassCard className="p-6 border-primary/30 bg-primary/10">
+                                <p className="text-white/80 text-sm">
+                                    <span className="font-semibold text-primary">MVP boundary:</span> Business posting tools are disabled until moderation and storage workflows are completed in Phase 2.
+                                </p>
+                            </GlassCard>
                         </div>
                     )}
 
@@ -157,8 +142,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                                     <input name="password" type="password" placeholder="********" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/40 outline-none cursor-not-allowed" disabled />
                                     <p className="text-[10px] text-white/30 mt-1">Password changes are handled via Google Account</p>
                                 </div>
-                                <button type="submit" className="w-full !mt-6 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:shadow-glow-primary transition-all">
-                                    {t('dashboard.saveChanges')}
+                                <button type="submit" disabled className="w-full !mt-6 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                                    {t('dashboard.saveChanges')} • Coming Soon
                                 </button>
                             </form>
                         </GlassCard>
