@@ -66,7 +66,7 @@ export const api = {
 
     if (!hasSupabaseEnv) {
       businessDataSource = "fallback";
-      // We intentionally do NOT fallback to Firebase anymore.
+      // Keep fallback empty; do not silently switch to any alternate backend.
       return { data: [] as Business[], hasMore: false, nextOffset: offset, totalCount: undefined, source: businessDataSource };
     }
 
