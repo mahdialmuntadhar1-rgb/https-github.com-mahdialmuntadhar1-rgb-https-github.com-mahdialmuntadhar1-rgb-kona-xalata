@@ -16,7 +16,6 @@ import { Dashboard } from './components/Dashboard';
 import { SubcategoryModal } from './components/SubcategoryModal';
 import { GovernorateFilter } from './components/GovernorateFilter';
 import { SearchPortal } from './components/SearchPortal';
-import { mockUser } from './constants';
 import { api } from './services/api';
 import { supabase } from './src/lib/supabase';
 import type { User, Category, Subcategory, Post } from './types';
@@ -87,31 +86,35 @@ const MainContent: React.FC = () => {
   });
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const authUser = session?.user;
-
-      if (authUser) {
-        const pendingRole = sessionStorage.getItem('pending_role') as 'user' | 'owner' | null;
-        const user = await api.getOrCreateProfile(authUser, pendingRole || 'user');
-        setCurrentUser(user);
-        setIsLoggedIn(!!user);
-        sessionStorage.removeItem('pending_role');
-      } else {
+    const bootstrapFromSession = async (authUser: { id: string } | null | undefined) => {
+      if (!authUser) {
         setCurrentUser(null);
         setIsLoggedIn(false);
+        return;
       }
 
+      const pendingRole = sessionStorage.getItem('pending_role') as 'user' | 'owner' | null;
+
+      try {
+        const user = await api.getOrCreateProfile(authUser, pendingRole || 'user');
+        setCurrentUser(user);
+        setIsLoggedIn(Boolean(user));
+      } catch (error) {
+        console.error('Profile bootstrap error:', error);
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+      } finally {
+        sessionStorage.removeItem('pending_role');
+      }
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      await bootstrapFromSession(session?.user);
       setIsAuthReady(true);
     });
 
     supabase.auth.getSession().then(async ({ data }) => {
-      const authUser = data.session?.user;
-      if (authUser) {
-        const pendingRole = sessionStorage.getItem('pending_role') as 'user' | 'owner' | null;
-        const user = await api.getOrCreateProfile(authUser, pendingRole || 'user');
-        setCurrentUser(user);
-        setIsLoggedIn(!!user);
-      }
+      await bootstrapFromSession(data.session?.user);
       setIsAuthReady(true);
     });
 
@@ -152,7 +155,12 @@ const MainContent: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Sign out failed:', error);
+      return;
+    }
+
     setIsLoggedIn(false);
     setCurrentUser(null);
     setPage('home');
@@ -254,7 +262,7 @@ const MainContent: React.FC = () => {
                 onBack={() => navigateTo('home')} 
             />
         )}
-        {page === 'dashboard' && <Dashboard user={currentUser!} onLogout={handleLogout} />}
+        {page === 'dashboard' && currentUser && <Dashboard user={currentUser} onLogout={handleLogout} />}
       </main>
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onLogin={handleLogin} />}
       <SubcategoryModal 

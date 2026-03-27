@@ -28,6 +28,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             if (result.success) {
                 setStatusMsg({ type: 'success', text: 'Post created successfully!' });
                 setTimeout(() => setStatusMsg(null), 3000);
+            } else {
+                setStatusMsg({ type: 'error', text: 'Posting is in limited beta for now.' });
+                setTimeout(() => setStatusMsg(null), 3000);
             }
         } catch (error) {
             console.error('Error creating post:', error);
@@ -71,6 +74,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
             )}
 
+
+            <div className="mb-8 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+                Dashboard is currently in limited beta: profile basics are live, while advanced owner/admin tools are coming soon.
+            </div>
             <div className="flex flex-col md:flex-row items-center justify-between mb-12 text-center md:text-start rtl:md:text-right">
                 <div className="flex flex-col md:flex-row items-center gap-6 mb-6 md:mb-0">
                     <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full border-4 border-primary" />

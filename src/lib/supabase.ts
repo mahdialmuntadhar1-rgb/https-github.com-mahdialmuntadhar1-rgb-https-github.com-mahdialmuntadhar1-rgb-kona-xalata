@@ -1,9 +1,7 @@
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
-}
+export const hasSupabaseEnv = Boolean(supabaseUrl && supabaseAnonKey);
 
 type AuthUser = {
   id: string;
@@ -17,8 +15,17 @@ type AuthSession = {
   user: AuthUser;
 };
 
+type SupabaseError = {
+  message: string;
+  [key: string]: unknown;
+};
+
 const SESSION_KEY = 'supabase_auth_session';
 const listeners = new Set<(event: string, session: AuthSession | null) => void>();
+
+const missingEnvError = (): SupabaseError => ({
+  message: 'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable auth.',
+});
 
 const safeJsonParse = <T>(value: string | null): T | null => {
   if (!value) return null;
@@ -44,6 +51,8 @@ const emitAuthChange = (event: string, session: AuthSession | null) => {
 };
 
 const parseOAuthHashSession = async () => {
+  if (!hasSupabaseEnv || !supabaseUrl || !supabaseAnonKey) return;
+
   const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
   if (!hash.includes('access_token=')) return;
 
@@ -77,6 +86,7 @@ const parseOAuthHashSession = async () => {
 };
 
 const ensureOAuthSessionParsed = () => {
+  if (!hasSupabaseEnv) return;
   void parseOAuthHashSession();
 };
 
@@ -84,8 +94,8 @@ const authHeaders = (withAuth = true) => {
   const session = getStoredSession();
 
   return {
-    apikey: supabaseAnonKey,
-    Authorization: withAuth ? `Bearer ${session?.access_token || supabaseAnonKey}` : `Bearer ${supabaseAnonKey}`,
+    apikey: supabaseAnonKey || '',
+    Authorization: withAuth ? `Bearer ${session?.access_token || supabaseAnonKey || ''}` : `Bearer ${supabaseAnonKey || ''}`,
     'Content-Type': 'application/json',
   };
 };
@@ -114,6 +124,10 @@ export const supabase = {
     },
 
     async signInWithPassword({ email, password }: { email: string; password: string }) {
+      if (!hasSupabaseEnv || !supabaseUrl || !supabaseAnonKey) {
+        return { error: missingEnvError() };
+      }
+
       const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
         method: 'POST',
         headers: authHeaders(false),
@@ -135,6 +149,10 @@ export const supabase = {
     },
 
     async signUp({ email, password }: { email: string; password: string }) {
+      if (!hasSupabaseEnv || !supabaseUrl || !supabaseAnonKey) {
+        return { error: missingEnvError() };
+      }
+
       const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
         method: 'POST',
         headers: authHeaders(false),
@@ -158,6 +176,10 @@ export const supabase = {
     },
 
     async signInWithOAuth({ provider, options }: { provider: 'google'; options?: { redirectTo?: string } }) {
+      if (!hasSupabaseEnv || !supabaseUrl) {
+        return { error: missingEnvError() };
+      }
+
       const redirectTo = options?.redirectTo || window.location.origin;
       const authUrl = `${supabaseUrl}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectTo)}`;
       window.location.href = authUrl;
@@ -165,6 +187,12 @@ export const supabase = {
     },
 
     async signOut() {
+      if (!hasSupabaseEnv || !supabaseUrl || !supabaseAnonKey) {
+        setStoredSession(null);
+        emitAuthChange('SIGNED_OUT', null);
+        return { error: null };
+      }
+
       const session = getStoredSession();
       if (session?.access_token) {
         await fetch(`${supabaseUrl}/auth/v1/logout`, {
@@ -187,6 +215,10 @@ export const supabase = {
       single?: boolean;
     } = {},
   ) {
+    if (!hasSupabaseEnv || !supabaseUrl || !supabaseAnonKey) {
+      return { data: null, error: missingEnvError() };
+    }
+
     const params: string[] = ['select=*'];
 
     for (const filter of options.filters || []) {
@@ -216,6 +248,10 @@ export const supabase = {
   },
 
   async insert(table: string, value: Record<string, any>, single = false) {
+    if (!hasSupabaseEnv || !supabaseUrl || !supabaseAnonKey) {
+      return { data: null, error: missingEnvError() };
+    }
+
     const response = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
       method: 'POST',
       headers: {
@@ -234,6 +270,10 @@ export const supabase = {
   },
 
   async update(table: string, value: Record<string, any>, filters: Array<{ key: string; value: string | number }>) {
+    if (!hasSupabaseEnv || !supabaseUrl || !supabaseAnonKey) {
+      return { error: missingEnvError() };
+    }
+
     const params = filters.map((f) => buildFilter(f.key, 'eq', f.value)).join('&');
 
     const response = await fetch(`${supabaseUrl}/rest/v1/${table}?${params}`, {
@@ -249,6 +289,10 @@ export const supabase = {
   },
 
   async upsert(table: string, value: Record<string, any>, onConflict: string) {
+    if (!hasSupabaseEnv || !supabaseUrl || !supabaseAnonKey) {
+      return { error: missingEnvError() };
+    }
+
     const response = await fetch(`${supabaseUrl}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`, {
       method: 'POST',
       headers: {

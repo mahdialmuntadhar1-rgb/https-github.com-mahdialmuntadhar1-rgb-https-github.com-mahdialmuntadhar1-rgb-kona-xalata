@@ -8,16 +8,32 @@ interface AuthModalProps {
     onLogin: (role: 'user' | 'owner') => void;
 }
 
+const getFriendlyAuthError = (error: unknown): string => {
+    if (!error) return 'Something went wrong. Please try again.';
+
+    if (typeof error === 'string') return error;
+
+    if (typeof error === 'object' && error !== null) {
+        const maybeMessage = (error as { message?: string }).message;
+        if (maybeMessage) return maybeMessage;
+    }
+
+    return 'Authentication failed. Please try again.';
+};
+
 export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
     const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
     const [role, setRole] = useState<'user' | 'owner'>('user');
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [authMessage, setAuthMessage] = useState<{ type: 'error' | 'info'; text: string } | null>(null);
     const { t } = useTranslations();
     
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
+        setAuthMessage(null);
+
         try {
             sessionStorage.setItem('pending_role', role);
 
@@ -29,10 +45,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
             if (error) {
                 throw error;
             }
-
-            onLogin(role);
         } catch (error) {
             console.error('Google Sign-In Error:', error);
+            setAuthMessage({ type: 'error', text: getFriendlyAuthError(error) });
             sessionStorage.removeItem('pending_role');
         } finally {
             setIsLoading(false);
@@ -43,18 +58,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
         if (!email || !password) return;
 
         setIsLoading(true);
+        setAuthMessage(null);
+
         try {
             sessionStorage.setItem('pending_role', role);
 
-            const { error } = activeTab === 'signin'
-                ? await supabase.auth.signInWithPassword({ email, password })
-                : await supabase.auth.signUp({ email, password });
+            if (activeTab === 'signin') {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
 
+                if (data?.access_token) {
+                    onLogin(role);
+                    return;
+                }
+
+                throw new Error('Sign in did not return a valid session. Please try again.');
+            }
+
+            const { data, error } = await supabase.auth.signUp({ email, password });
             if (error) throw error;
 
-            onLogin(role);
+            if (data?.access_token) {
+                onLogin(role);
+                return;
+            }
+
+            sessionStorage.removeItem('pending_role');
+            setAuthMessage({
+                type: 'info',
+                text: 'Account created. Please check your email to confirm your account before signing in.',
+            });
         } catch (error) {
             console.error('Email Auth Error:', error);
+            setAuthMessage({ type: 'error', text: getFriendlyAuthError(error) });
             sessionStorage.removeItem('pending_role');
         } finally {
             setIsLoading(false);
@@ -145,9 +181,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
                         </button>
                     </div>
 
+                    {authMessage && (
+                        <p className={`text-sm rounded-xl border px-3 py-2 ${authMessage.type === 'error' ? 'text-red-300 border-red-500/40 bg-red-500/10' : 'text-cyan-200 border-cyan-500/40 bg-cyan-500/10'}`}>
+                            {authMessage.text}
+                        </p>
+                    )}
+
                     <div className="text-center">
                         <button 
-                            onClick={() => setActiveTab(activeTab === 'signin' ? 'signup' : 'signin')}
+                            onClick={() => {
+                                setActiveTab(activeTab === 'signin' ? 'signup' : 'signin');
+                                setAuthMessage(null);
+                            }}
                             className="text-primary text-sm font-medium hover:underline"
                         >
                             {activeTab === 'signin' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
