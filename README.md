@@ -2,36 +2,35 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Iraq Compass Frontend
 
-This contains everything you need to run your app locally.
+This repository contains a Vite + React frontend for the Iraq Compass app.
 
-View your app in AI Studio: https://ai.studio/apps/accadf3d-012c-4037-9b18-c758fba3ddf9
+## Architecture
 
-## Run Locally
+- **Frontend:** Vite + React
+- **Hosting/Deployment:** Cloudflare Pages
+- **Backend/Data:** Supabase (REST + auth/profile integration points)
 
-**Prerequisites:**  Node.js
+This project does **not** use Gemini, Google AI Studio, Firebase, or any AI runtime dependency.
 
+## Local development
+
+**Prerequisites:** Node.js
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+   ```bash
+   npm install
+   ```
+2. Create a local environment file (for example `.env.local`) and set:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
 3. Run the app:
-   `npm run dev`
+   ```bash
+   npm run dev
+   ```
 
-## Deploy (Cloudflare Pages only)
-
-This repository is configured for **Cloudflare Pages** deployment only.
-
-- Build command: `npm run build`
-- Build output directory: `dist`
-
-### Important
-
-- Do **not** use Cloudflare Workers deployment for this repo.
-- No `wrangler` deploy scripts or Workers config are required.
-- `.wrangler/` artifacts are intentionally ignored and should not be committed.
-## Cloudflare Pages deployment
+## Deployment (Cloudflare Pages)
 
 Configure Cloudflare Pages with:
 
@@ -40,3 +39,9 @@ Configure Cloudflare Pages with:
 - **Environment variables:**
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+
+### Notes
+
+- This repo is configured for **Cloudflare Pages** deployment.
+- Do **not** add Cloudflare Workers deployment config for this app.
+- `.wrangler/` artifacts are intentionally ignored and should not be committed.

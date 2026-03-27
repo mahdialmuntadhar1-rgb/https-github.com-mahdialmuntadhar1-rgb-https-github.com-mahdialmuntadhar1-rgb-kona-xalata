@@ -29,6 +29,13 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
     "https://picsum.photos/seed/placeholder/400/300";
 
   const displayReviews = business.reviewCount ?? business.reviews ?? 0;
+  const rating = Number.isFinite(Number(business.rating)) ? Number(business.rating) : 0;
+  const websiteUrl = business.website
+    ? /^https?:\/\//i.test(business.website)
+      ? business.website
+      : `https://${business.website}`
+    : null;
+  const contactHref = business.phone ? `tel:${business.phone}` : null;
 
   // IMPORTANT: do NOT read business.verified (Supabase column may not exist).
   const isVerified = business.isVerified ?? false;
@@ -49,7 +56,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-accent fill-accent" />
-              <span className="text-white">{business.rating}</span>
+              <span className="text-white">{rating.toFixed(1)}</span>
             </div>
             <div className="flex items-center gap-1 text-white/60">
               <MapPin className="w-4 h-4" />
@@ -58,12 +65,40 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
           </div>
         </div>
         <div className="flex flex-col justify-center gap-2">
-          <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm">
-            {t("directory.view")}
-          </button>
-          <button className="px-4 py-2 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white font-medium text-sm">
-            {t("directory.contact")}
-          </button>
+          {websiteUrl ? (
+            <a
+              href={websiteUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm text-center"
+            >
+              {t("directory.viewProfile") || "Visit Website"}
+            </a>
+          ) : (
+            <button
+              disabled
+              title="No business profile is available yet."
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary/60 to-secondary/60 text-white/70 font-medium text-sm cursor-not-allowed"
+            >
+              {t("directory.viewProfile") || "Profile unavailable"}
+            </button>
+          )}
+          {contactHref ? (
+            <a
+              href={contactHref}
+              className="px-4 py-2 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white font-medium text-sm text-center"
+            >
+              {t("directory.contact")}
+            </a>
+          ) : (
+            <button
+              disabled
+              title="No public phone number is available."
+              className="px-4 py-2 rounded-xl backdrop-blur-xl bg-white/10 border border-white/20 text-white/60 font-medium text-sm cursor-not-allowed"
+            >
+              {t("directory.contact")} ({t("directory.unavailable") || "Unavailable"})
+            </button>
+          )}
         </div>
       </GlassCard>
     );
@@ -91,7 +126,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <Star className="w-4 h-4 text-accent fill-accent" />
-            <span className="text-white font-medium">{business.rating}</span>
+            <span className="text-white font-medium">{rating.toFixed(1)}</span>
             <span className="text-white/60 text-sm">({displayReviews})</span>
           </div>
           <div className="flex items-center gap-1 text-white/60 text-sm">
@@ -99,9 +134,24 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
             {business.distance || "1.2"} km
           </div>
         </div>
-        <button className="w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:shadow-glow-primary transition-all">
-          {t("directory.viewProfile")}
-        </button>
+        {websiteUrl ? (
+          <a
+            href={websiteUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="block w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:shadow-glow-primary transition-all text-center"
+          >
+            {t("directory.viewProfile")}
+          </a>
+        ) : (
+          <button
+            disabled
+            title="No business profile is available yet."
+            className="w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-primary/60 to-secondary/60 text-white/70 font-semibold cursor-not-allowed"
+          >
+            {t("directory.viewProfile")} ({t("directory.unavailable") || "Unavailable"})
+          </button>
+        )}
       </div>
     </GlassCard>
   );
@@ -154,6 +204,7 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
     try {
       const result = (await api.getBusinesses({
         category: filters.category,
+        ratingMin: filters.rating,
         city: filters.city,
         governorate: filters.governorate,
         offset: isLoadMore ? offset : 0,
@@ -281,7 +332,10 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
           <div className="lg:col-span-3">
             <div className="flex items-center justify-between mb-6">
               <p className="text-white/80">
-                {businessesData.length} {t("directory.businessesShown") || "businesses shown"}
+                {businessesData.length}{" "}
+                {hasMore
+                  ? t("directory.businessesShown") || "businesses loaded so far"
+                  : t("directory.businessesFound") || "businesses found"}
               </p>
               <div className="flex items-center gap-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl p-1">
                 <button
@@ -337,6 +391,12 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
                 <p className="text-white/60 text-sm max-w-xs mx-auto">
                   {t("directory.noResultsDesc") ||
                     "We couldn't find any businesses matching your current filters. Try adjusting your search."}
+                </p>
+                <p className="text-white/40 text-xs mt-3">
+                  {(t("directory.activeFilters") || "Active filters") +
+                    `: ${filters.category !== "all" ? filters.category : "all categories"}, ` +
+                    `${filters.city ? `city contains "${filters.city}"` : "all cities"}, ` +
+                    `${filters.rating > 0 ? `rating ≥ ${filters.rating}` : "all ratings"}`}
                 </p>
               </div>
             ) : (
