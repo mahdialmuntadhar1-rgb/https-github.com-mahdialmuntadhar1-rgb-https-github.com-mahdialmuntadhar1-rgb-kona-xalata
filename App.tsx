@@ -18,8 +18,7 @@ import { GovernorateFilter } from './components/GovernorateFilter';
 import { SearchPortal } from './components/SearchPortal';
 import { mockUser } from './constants';
 import { api } from './services/api';
-import { auth } from './firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { supabase } from './src/lib/supabase';
 import type { User, Category, Subcategory, Post } from './types';
 import { TranslationProvider } from './hooks/useTranslations';
 
@@ -87,11 +86,12 @@ const MainContent: React.FC = () => {
   });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Retrieve the role from sessionStorage if it was set during the AuthModal flow
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const authUser = session?.user;
+
+      if (authUser) {
         const pendingRole = sessionStorage.getItem('pending_role') as 'user' | 'owner' | null;
-        const user = await api.getOrCreateProfile(firebaseUser, pendingRole || 'user');
+        const user = await api.getOrCreateProfile(authUser, pendingRole || 'user');
         setCurrentUser(user);
         setIsLoggedIn(!!user);
         sessionStorage.removeItem('pending_role');
@@ -99,10 +99,22 @@ const MainContent: React.FC = () => {
         setCurrentUser(null);
         setIsLoggedIn(false);
       }
+
       setIsAuthReady(true);
     });
 
-    return () => unsubscribe();
+    supabase.auth.getSession().then(async ({ data }) => {
+      const authUser = data.session?.user;
+      if (authUser) {
+        const pendingRole = sessionStorage.getItem('pending_role') as 'user' | 'owner' | null;
+        const user = await api.getOrCreateProfile(authUser, pendingRole || 'user');
+        setCurrentUser(user);
+        setIsLoggedIn(!!user);
+      }
+      setIsAuthReady(true);
+    });
+
+    return () => authListener.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -133,15 +145,13 @@ const MainContent: React.FC = () => {
   }, [highContrast]);
 
   const handleLogin = (role: 'user' | 'owner') => {
-    // Auth is handled in AuthModal via signInWithPopup, 
-    // which triggers onAuthStateChanged above.
-    // We store the role in sessionStorage to be picked up by the listener.
+    // Auth is handled in AuthModal via Supabase Auth.
     sessionStorage.setItem('pending_role', role);
     setShowAuthModal(false);
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     setIsLoggedIn(false);
     setCurrentUser(null);
     setPage('home');

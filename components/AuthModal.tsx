@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { X, User } from './icons';
+import { X } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
-import { auth } from '../firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { supabase } from '../src/lib/supabase';
 
 interface AuthModalProps {
     onClose: () => void;
@@ -13,21 +12,49 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
     const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
     const [role, setRole] = useState<'user' | 'owner'>('user');
     const [isLoading, setIsLoading] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const { t } = useTranslations();
     
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
         try {
-            // Store the role in sessionStorage BEFORE triggering the popup
-            // to ensure onAuthStateChanged picks it up correctly.
             sessionStorage.setItem('pending_role', role);
-            
-            const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
+
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin },
+            });
+
+            if (error) {
+                throw error;
+            }
+
             onLogin(role);
         } catch (error) {
             console.error('Google Sign-In Error:', error);
-            // Clear the pending role if sign-in fails
+            sessionStorage.removeItem('pending_role');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleEmailAuth = async () => {
+        if (!email || !password) return;
+
+        setIsLoading(true);
+        try {
+            sessionStorage.setItem('pending_role', role);
+
+            const { error } = activeTab === 'signin'
+                ? await supabase.auth.signInWithPassword({ email, password })
+                : await supabase.auth.signUp({ email, password });
+
+            if (error) throw error;
+
+            onLogin(role);
+        } catch (error) {
+            console.error('Email Auth Error:', error);
             sessionStorage.removeItem('pending_role');
         } finally {
             setIsLoading(false);
@@ -79,7 +106,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
                             <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                         ) : (
                             <>
-                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                                <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
                                 <span>Continue with Google</span>
                             </>
                         )}
@@ -94,10 +121,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
                         </div>
                     </div>
 
-                    <div className="space-y-4 opacity-50 pointer-events-none">
-                        <input type="email" placeholder="Email address" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none" />
-                        <input type="password" placeholder="Password" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none" />
-                        <button className="w-full py-3 rounded-xl bg-white/10 text-white/40 font-semibold">
+                    <div className="space-y-4">
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Email address"
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none"
+                        />
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Password"
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none"
+                        />
+                        <button
+                            onClick={handleEmailAuth}
+                            disabled={isLoading || !email || !password}
+                            className="w-full py-3 rounded-xl bg-white/10 text-white font-semibold disabled:opacity-50"
+                        >
                             {activeTab === 'signin' ? t('auth.signIn') : t('auth.createAccount')}
                         </button>
                     </div>
