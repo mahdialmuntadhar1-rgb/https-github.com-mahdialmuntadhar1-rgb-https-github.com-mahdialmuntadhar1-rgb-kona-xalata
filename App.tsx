@@ -6,9 +6,10 @@ import { Dashboard } from './components/Dashboard';
 import { SubcategoryModal } from './components/SubcategoryModal';
 import { HomePage } from './components/HomePage';
 import { api } from './services/api';
+import { auth } from './firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User, Category, Subcategory, Post } from './types';
 import { TranslationProvider, useTranslations } from './hooks/useTranslations';
-import { useAuth } from './hooks/useAuth';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { translations } from './constants';
@@ -73,7 +74,7 @@ const MainContent: React.FC = () => {
   const { t } = useTranslations();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const { user: authUser, loading: authLoading, signOut } = useAuth();
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [page, setPage] = useState<'home' | 'dashboard' | 'listing'>('home');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -91,10 +92,11 @@ const MainContent: React.FC = () => {
   });
 
   useEffect(() => {
-    const syncProfile = async () => {
-      if (authUser) {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Retrieve the role from sessionStorage if it was set during the AuthModal flow
         const pendingRole = sessionStorage.getItem('pending_role') as 'user' | 'owner' | null;
-        const user = await api.getOrCreateProfile(authUser, pendingRole || 'user');
+        const user = await api.getOrCreateProfile(firebaseUser, pendingRole || 'user');
         setCurrentUser(user);
         setIsLoggedIn(!!user);
         sessionStorage.removeItem('pending_role');
@@ -102,14 +104,11 @@ const MainContent: React.FC = () => {
         setCurrentUser(null);
         setIsLoggedIn(false);
       }
-    };
-
-    syncProfile().catch((error) => {
-      console.error('Failed to sync profile with Firebase Auth:', error);
-      setCurrentUser(null);
-      setIsLoggedIn(false);
+      setIsAuthReady(true);
     });
-  }, [authUser]);
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     setIsSocialLoading(true);
@@ -130,12 +129,16 @@ const MainContent: React.FC = () => {
     }
   }, [highContrast]);
 
-  const handleLogin = () => {
+  const handleLogin = (role: 'user' | 'owner') => {
+    // Auth is handled in AuthModal via signInWithPopup, 
+    // which triggers onAuthStateChanged above.
+    // We store the role in sessionStorage to be picked up by the listener.
+    sessionStorage.setItem('pending_role', role);
     setShowAuthModal(false);
   };
 
   const handleLogout = async () => {
-    await signOut();
+    await signOut(auth);
     setIsLoggedIn(false);
     setCurrentUser(null);
     setPage('home');
@@ -180,7 +183,7 @@ const MainContent: React.FC = () => {
     }
   };
 
-  if (authLoading) {
+  if (!isAuthReady) {
     return (
       <div className="min-h-screen bg-dark-bg flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />

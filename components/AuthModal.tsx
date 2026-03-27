@@ -1,55 +1,34 @@
 import React, { useState } from 'react';
-import { X } from './icons';
+import { X, User } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
-import { useAuth } from '../hooks/useAuth';
+import { auth } from '../firebase';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 interface AuthModalProps {
     onClose: () => void;
-    onLogin: () => void;
+    onLogin: (role: 'user' | 'owner') => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
     const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
     const [role, setRole] = useState<'user' | 'owner'>('user');
     const [isLoading, setIsLoading] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const { t } = useTranslations();
-    const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
-
+    
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
-        setErrorMessage(null);
         try {
-            await signInWithGoogle(activeTab === 'signup' ? role : undefined);
-            onLogin();
+            // Store the role in sessionStorage BEFORE triggering the popup
+            // to ensure onAuthStateChanged picks it up correctly.
+            sessionStorage.setItem('pending_role', role);
+            
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            onLogin(role);
         } catch (error) {
             console.error('Google Sign-In Error:', error);
-            setErrorMessage(error instanceof Error ? error.message : 'Google sign-in failed.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleEmailAuth = async () => {
-        if (!email || !password) {
-            setErrorMessage('Email and password are required.');
-            return;
-        }
-
-        setIsLoading(true);
-        setErrorMessage(null);
-        try {
-            if (activeTab === 'signin') {
-                await signInWithEmail(email, password);
-            } else {
-                await signUpWithEmail(email, password, role);
-            }
-            onLogin();
-        } catch (error) {
-            console.error('Email auth error:', error);
-            setErrorMessage(error instanceof Error ? error.message : 'Authentication failed.');
+            // Clear the pending role if sign-in fails
+            sessionStorage.removeItem('pending_role');
         } finally {
             setIsLoading(false);
         }
@@ -61,7 +40,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
                 <button onClick={onClose} className="absolute top-4 end-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
                     <X className="w-5 h-5 text-white" />
                 </button>
-
+                
                 <h2 className="text-2xl font-bold text-white mb-2">
                     {activeTab === 'signin' ? t('auth.signIn') : t('auth.signUp')}
                 </h2>
@@ -91,7 +70,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
                         </div>
                     )}
 
-                    <button
+                    <button 
                         onClick={handleGoogleSignIn}
                         disabled={isLoading}
                         className="w-full py-4 rounded-xl bg-white text-black font-bold flex items-center justify-center gap-3 hover:bg-white/90 transition-all disabled:opacity-50"
@@ -100,7 +79,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
                             <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                         ) : (
                             <>
-                                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-black text-xs font-bold text-white">G</span>
+                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
                                 <span>{t('auth.continueGoogle')}</span>
                             </>
                         )}
@@ -115,33 +94,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder={t('auth.email')}
-                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none"
-                        />
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder={t('auth.password')}
-                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none"
-                        />
-                        <button
-                            onClick={handleEmailAuth}
-                            disabled={isLoading}
-                            className="w-full py-3 rounded-xl bg-primary text-white font-semibold disabled:opacity-50"
-                        >
+                    <div className="space-y-4 opacity-50 pointer-events-none">
+                        <input type="email" placeholder={t('auth.email')} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none" />
+                        <input type="password" placeholder={t('auth.password')} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none" />
+                        <button className="w-full py-3 rounded-xl bg-white/10 text-white/40 font-semibold">
                             {activeTab === 'signin' ? t('auth.signIn') : t('auth.createAccount')}
                         </button>
-                        {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
                     </div>
 
                     <div className="text-center">
-                        <button
+                        <button 
                             onClick={() => setActiveTab(activeTab === 'signin' ? 'signup' : 'signin')}
                             className="text-primary text-sm font-medium hover:underline"
                         >
