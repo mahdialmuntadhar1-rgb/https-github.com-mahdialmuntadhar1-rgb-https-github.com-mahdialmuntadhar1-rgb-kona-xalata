@@ -1,20 +1,85 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Iraq Compass Frontend
 
-# Run and deploy your AI Studio app
+React + Vite frontend for Iraq Compass.
 
-This contains everything you need to run your app locally.
+> **Migration status (2026-03-27):**
+> Supabase-oriented deployment checks exist, but runtime auth/data code still uses Firebase.
+> Firebase runtime/config files must remain until Supabase replacement is verified end-to-end.
 
-View your app in AI Studio: https://ai.studio/apps/accadf3d-012c-4037-9b18-c758fba3ddf9
+## Setup
 
-## Run Locally
+### Prerequisites
 
-**Prerequisites:**  Node.js
+- Node.js 20+
+- npm 10+
 
+### Install and run
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+npm install
+npm run dev
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+## Environment variables
+
+Environment variables verified in this repo:
+
+- `GEMINI_API_KEY` (loaded in `vite.config.ts`)
+- `VITE_SUPABASE_URL` (required by `scripts/preflight.sh`)
+- `VITE_SUPABASE_ANON_KEY` (required by `scripts/preflight.sh`)
+
+Current Firebase runtime config is loaded from `firebase-applet-config.json` via `firebase.ts`.
+
+## Authentication
+
+- Current runtime auth: Firebase Auth (`firebase.ts`, `App.tsx`, `components/AuthModal.tsx`).
+- Supabase auth runtime is not yet present in this repo.
+
+## Database
+
+- Current runtime database path: Firestore (`services/api.ts`).
+- Firestore rules are defined in `firestore.rules`.
+- Supabase schema/RLS status doc: `docs/schema-and-rls.md`.
+
+## Deployment
+
+### Preflight
+
+```bash
+./scripts/preflight.sh
+```
+
+Checks Supabase env vars, then runs lint and build.
+
+### Verify deploy artifact
+
+```bash
+./scripts/verify-deploy.sh
+```
+
+Runs lint/build and scans built assets for forbidden legacy strings.
+
+## Testing
+
+```bash
+npm run lint
+npm run build
+./scripts/preflight.sh
+./scripts/verify-deploy.sh
+```
+
+## Scope
+
+- **In scope:** code and docs in this repository.
+- **Out of scope:** external deployment projects, Supabase dashboard-managed resources, and other repos not versioned here.
+
+## Migration docs
+
+- `docs/schema-and-rls.md`
+- `docs/migration-summary.md`
