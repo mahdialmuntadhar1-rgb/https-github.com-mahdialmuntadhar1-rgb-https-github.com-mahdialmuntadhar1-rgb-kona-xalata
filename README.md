@@ -9,7 +9,7 @@ This app now uses **Supabase as the only backend** for:
 - Database reads/writes
 - Realtime post updates
 
-Firebase has been removed from runtime code, config, dependencies, and setup.
+Legacy backend dependencies have been removed from runtime code, config, dependencies, and setup.
 
 ## Local setup
 
@@ -23,7 +23,7 @@ Firebase has been removed from runtime code, config, dependencies, and setup.
    ```env
    VITE_SUPABASE_URL=your_supabase_project_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   GEMINI_API_KEY=your_gemini_api_key
+   VITE_GEMINI_API_KEY=your_gemini_api_key
    ```
 3. Run the app:
    ```bash

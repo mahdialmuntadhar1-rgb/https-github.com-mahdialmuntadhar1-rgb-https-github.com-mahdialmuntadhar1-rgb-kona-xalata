@@ -45,7 +45,7 @@ export const DataArchitect: React.FC = () => {
       const flagged: { name: string; city: string; reason: string }[] = [];
       const postcards: BusinessPostcard[] = [];
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY as string });
 
       for (const place of places) {
         const name = place.title || place.name;
@@ -114,7 +114,7 @@ export const DataArchitect: React.FC = () => {
           google_maps_url: place.url || place.googleMapsUrl,
           rating: place.totalScore || place.rating || 0,
           review_count: place.reviewsCount || place.reviewCount || 0,
-          verified: true
+          isVerified: true
         };
 
         // STEP 6: UPSERT

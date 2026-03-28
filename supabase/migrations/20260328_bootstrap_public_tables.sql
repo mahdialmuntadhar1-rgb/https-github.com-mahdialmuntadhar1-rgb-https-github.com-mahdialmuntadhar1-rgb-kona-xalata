@@ -118,7 +118,7 @@ create table if not exists public.business_postcards (
   google_maps_url text not null,
   rating numeric(3,2) not null default 0,
   review_count integer not null default 0,
-  verified boolean not null default false,
+  "isVerified" boolean not null default false,
   "updatedAt" timestamptz not null default now()
 );
 
@@ -300,7 +300,7 @@ insert into public.business_postcards (
   google_maps_url,
   rating,
   review_count,
-  verified
+  "isVerified"
 )
 values (
   'baghdad-river-cafe_karrada',
@@ -335,5 +335,5 @@ set title = excluded.title,
     google_maps_url = excluded.google_maps_url,
     rating = excluded.rating,
     review_count = excluded.review_count,
-    verified = excluded.verified,
+    "isVerified" = excluded."isVerified",
     "updatedAt" = now();

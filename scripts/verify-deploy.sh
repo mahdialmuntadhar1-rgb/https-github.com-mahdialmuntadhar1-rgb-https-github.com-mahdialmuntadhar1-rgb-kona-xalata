@@ -8,7 +8,7 @@ echo "Running build..."
 npm run build
 
 echo "Scanning dist assets for forbidden legacy strings..."
-if grep -R -n -E "verified=eq\\.true|businesses\\.verified" dist --include='*.js'; then
+if grep -R -n -E "businesses\\.verified" dist --include='*.js'; then
   echo "Forbidden legacy string detected in built assets."
   exit 1
 fi

@@ -141,7 +141,7 @@ export interface BusinessPostcard {
   google_maps_url: string;
   rating: number;
   review_count: number;
-  verified: boolean;
+  isVerified: boolean;
   updatedAt?: any;
 }
 
