@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ ! -f firebase-applet-config.json ]]; then
-  echo "Missing required Firebase config file: firebase-applet-config.json"
+if [[ -z "${VITE_SUPABASE_URL:-}" || -z "${VITE_SUPABASE_ANON_KEY:-}" ]]; then
+  echo "Missing required Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY"
   exit 1
 fi
 
@@ -12,4 +12,4 @@ npm run lint
 echo "Running build..."
 npm run build
 
-echo "Preflight checks passed for frontend + Firebase deployment."
+echo "Preflight checks passed for Supabase frontend deployment."
