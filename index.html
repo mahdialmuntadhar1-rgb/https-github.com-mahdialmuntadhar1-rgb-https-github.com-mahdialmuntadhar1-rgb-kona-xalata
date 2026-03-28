@@ -1,27 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Iraq Compass</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Arabic:wght@100..900&display=swap" rel="stylesheet">
-  <script type="importmap">
-    {
-      "imports": {
-        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-        "react/": "https://aistudiocdn.com/react@^19.2.0/",
-        "react": "https://aistudiocdn.com/react@^19.2.0",
-        "@google/genai": "https://esm.run/@google/genai"
-      }
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iraq Compass</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Arabic:wght@100..900&display=swap" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Noto Sans', 'sans-serif'],
+                    arabic: ['Noto Sans Arabic', 'sans-serif'],
+                },
+                colors: {
+                    'primary': '#6C2BD9',
+                    'primary-glass': 'rgba(108, 43, 217, 0.15)',
+                    'primary-glow': 'rgba(108, 43, 217, 0.4)',
+                    'secondary': '#00D9FF',
+                    'secondary-glass': 'rgba(0, 217, 255, 0.12)',
+                    'secondary-glow': 'rgba(0, 217, 255, 0.4)',
+                    'accent': '#FF2E97',
+                    'accent-glass': 'rgba(255, 46, 151, 0.12)',
+                    'accent-glow': 'rgba(255, 46, 151, 0.4)',
+                    'dark-bg': '#0A0E27',
+                    'glass-surface': 'rgba(255, 255, 255, 0.05)',
+                    'glass-border': 'rgba(255, 255, 255, 0.1)',
+                    'glass-hover': 'rgba(255, 255, 255, 0.08)',
+                },
+                boxShadow: {
+                    'soft': '0 8px 32px rgba(0, 0, 0, 0.3)',
+                    'glow-primary': '0 0 20px rgba(108, 43, 217, 0.4)',
+                    'glow-secondary': '0 0 20px rgba(0, 217, 255, 0.4)',
+                    'glow-accent': '0 0 20px rgba(255, 46, 151, 0.4)',
+                }
+            }
+        }
     }
-  </script>
-  <link rel="stylesheet" href="/src/index.css">
+    </script>
+    <style>
+      body {
+        background-color: #0A0E27;
+        color: white;
+        font-family: 'Noto Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      }
+      html[dir="rtl"] body {
+        font-family: 'Noto Sans Arabic', sans-serif;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+      }
+      .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+      }
+      /* High Contrast Mode Styles */
+      [data-contrast="high"] body,
+      [data-contrast="high"] .bg-dark-bg {
+        background-color: #000000 !important;
+      }
+      [data-contrast="high"] .backdrop-blur-xl,
+      [data-contrast="high"] .backdrop-blur-lg,
+      [data-contrast="high"] .backdrop-blur-sm {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      [data-contrast="high"] .bg-white\/5,
+      [data-contrast="high"] .bg-white\/10,
+      [data-contrast="high"] .bg-white\/20,
+      [data-contrast="high"] [class*="bg-glass"],
+      [data-contrast="high"] [class*="bg-primary/"],
+      [data-contrast="high"] [class*="bg-secondary/"],
+      [data-contrast="high"] [class*="bg-accent/"],
+      [data-contrast="high"] [class*="bg-dark-bg/"],
+      [data-contrast="high"] [class*="bg-black/"] {
+        background-color: #1a1a1a !important;
+      }
+      [data-contrast="high"] [class*="border-white/"],
+      [data-contrast="high"] .border-glass-border {
+        border-color: #FFFFFF !important;
+      }
+      [data-contrast="high"] [class*="text-white/"] {
+        color: #FFFFFF !important;
+      }
+      [data-contrast="high"] [class*="shadow-glow"] {
+        box-shadow: none !important;
+      }
+      [data-contrast="high"] .bg-gradient-to-r,
+      [data-contrast="high"] .bg-gradient-to-br {
+        background-image: none !important;
+        background-color: #6C2BD9 !important;
+      }
+       [data-contrast="high"] .bg-clip-text {
+        background-image: none !important;
+        -webkit-background-clip: unset !important;
+        background-clip: unset !important;
+       }
+       [data-contrast="high"] .text-transparent {
+        color: #00D9FF !important;
+       }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://esm.run/@google/genai"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>
