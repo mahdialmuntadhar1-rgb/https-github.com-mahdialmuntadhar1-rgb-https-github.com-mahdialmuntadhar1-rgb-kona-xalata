@@ -78,7 +78,7 @@ export const api = {
 
       const mapped = (data || []).map((row: any) => ({
         ...row,
-        isVerified: row.isVerified ?? row.verified ?? false,
+        isVerified: row.isVerified ?? false,
       })) as Business[];
 
       const nextOffset = mapped.length === pageSize ? offset + mapped.length : undefined;
@@ -111,7 +111,7 @@ export const api = {
         const posts = (data || []).map((row: any) => ({
           ...row,
           createdAt: toDate(row.createdAt),
-          isVerified: row.isVerified ?? row.verified ?? false,
+          isVerified: row.isVerified ?? false,
           likes: row.likes ?? 0,
         })) as Post[];
 
@@ -321,7 +321,7 @@ export const api = {
 
       return (data || []).map((row: any) => ({
         ...row,
-        isVerified: row.isVerified ?? row.verified ?? false,
+        verified: row.verified ?? false,
         updatedAt: row.updatedAt ? toDate(row.updatedAt) : undefined,
       })) as BusinessPostcard[];
     } catch (error) {

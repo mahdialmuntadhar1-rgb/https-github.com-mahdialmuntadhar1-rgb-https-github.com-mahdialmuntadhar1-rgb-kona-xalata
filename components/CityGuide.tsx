@@ -47,7 +47,7 @@ export const CityGuide: React.FC = () => {
       setJourneyPoints([]);
       
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
+        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY as string });
         const response = await ai.models.generateContent({
            model: "gemini-3-flash-preview",
            contents: `Create a travel itinerary for the following request: "${searchQuery}". The trip should be in Iraq. Provide a list of waypoints.`,
