@@ -13,6 +13,7 @@ export interface Story {
   isLive?: boolean;
   media: string[];
   timeAgo: string;
+  governorate?: string;
 }
 
 export interface Subcategory {
@@ -123,6 +124,7 @@ export interface Post {
   createdAt: Date;
   likes: number;
   isVerified?: boolean;
+  governorate?: string;
 }
 
 export interface BusinessPostcard {

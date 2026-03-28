@@ -2,7 +2,11 @@ import React from 'react';
 import { FeaturedBusinesses } from './FeaturedBusinesses';
 import { motion } from 'motion/react';
 
-export const FeaturedSection: React.FC = () => {
+interface FeaturedSectionProps {
+    selectedGovernorate: string;
+}
+
+export const FeaturedSection: React.FC<FeaturedSectionProps> = ({ selectedGovernorate }) => {
     return (
         <motion.section 
             initial={{ opacity: 0, y: 40 }}
@@ -11,7 +15,7 @@ export const FeaturedSection: React.FC = () => {
             className="relative"
         >
             <div className="absolute top-1/2 left-0 -translate-y-1/2 w-64 h-64 bg-secondary/5 blur-[100px] rounded-full pointer-events-none" />
-            <FeaturedBusinesses />
+            <FeaturedBusinesses selectedGovernorate={selectedGovernorate} />
         </motion.section>
     );
 };

@@ -1,6 +1,7 @@
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import type { Business, Post, User, BusinessPostcard } from '../types';
+import { mockData, normalizeGovernorate } from './mockData';
 
 export enum OperationType {
   CREATE = 'create',
@@ -81,6 +82,18 @@ export const api = {
         isVerified: row.isVerified ?? false,
       })) as Business[];
 
+      if (mapped.length === 0) {
+        const fallback = mockData
+          .getFeaturedBusinesses(normalizeGovernorate(params.governorate))
+          .filter((business) => !params.featuredOnly || business.isFeatured);
+
+        return {
+          data: fallback,
+          lastDoc: undefined,
+          hasMore: false,
+        };
+      }
+
       const nextOffset = mapped.length === pageSize ? offset + mapped.length : undefined;
       const hasMore = typeof count === 'number' ? offset + mapped.length < count : mapped.length === pageSize;
 
@@ -90,8 +103,37 @@ export const api = {
         hasMore,
       };
     } catch (error) {
-      handleSupabaseError(error, OperationType.GET, path);
-      return { data: [], hasMore: false, lastDoc: undefined };
+      console.error('Businesses fetch failed, falling back to mock data:', error);
+      const fallback = mockData
+        .getFeaturedBusinesses(normalizeGovernorate(params.governorate))
+        .filter((business) => !params.featuredOnly || business.isFeatured);
+      return { data: fallback, hasMore: false, lastDoc: undefined };
+    }
+  },
+
+  async getPosts(governorate: string = 'all') {
+    const path = 'posts';
+
+    try {
+      const { data, error } = await supabase
+        .from(path)
+        .select('*')
+        .order('createdAt', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      const posts = (data || []).map((row: any) => ({
+        ...row,
+        createdAt: toDate(row.createdAt),
+        isVerified: row.isVerified ?? false,
+        likes: row.likes ?? 0,
+      })) as Post[];
+
+      return posts.length > 0 ? posts : mockData.getPosts(normalizeGovernorate(governorate));
+    } catch (error) {
+      console.error('Posts fetch failed, falling back to mock data:', error);
+      return mockData.getPosts(normalizeGovernorate(governorate));
     }
   },
 
@@ -153,7 +195,7 @@ export const api = {
     }
   },
 
-  async getStories() {
+  async getStories(governorate: string = 'all') {
     const path = 'stories';
 
     try {
@@ -164,10 +206,12 @@ export const api = {
         .limit(20);
 
       if (error) throw error;
-      return data || [];
+
+      const stories = data || [];
+      return stories.length > 0 ? stories : mockData.getStories(normalizeGovernorate(governorate));
     } catch (error) {
-      handleSupabaseError(error, OperationType.GET, path);
-      return [];
+      console.error('Stories fetch failed, falling back to mock data:', error);
+      return mockData.getStories(normalizeGovernorate(governorate));
     }
   },
 
@@ -313,20 +357,22 @@ export const api = {
       let query = supabase.from(path).select('*').order('updatedAt', { ascending: false });
 
       if (governorate && governorate !== 'all') {
-        query = query.eq('governorate', governorate);
+        query = query.ilike('governorate', governorate);
       }
 
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data || []).map((row: any) => ({
+      const postcards = (data || []).map((row: any) => ({
         ...row,
         verified: row.verified ?? false,
         updatedAt: row.updatedAt ? toDate(row.updatedAt) : undefined,
       })) as BusinessPostcard[];
+
+      return postcards.length > 0 ? postcards : mockData.getPostcards(normalizeGovernorate(governorate));
     } catch (error) {
-      handleSupabaseError(error, OperationType.GET, path);
-      return [];
+      console.error('Postcards fetch failed, falling back to mock data:', error);
+      return mockData.getPostcards(normalizeGovernorate(governorate));
     }
   },
 

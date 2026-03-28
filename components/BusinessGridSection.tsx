@@ -8,12 +8,16 @@ interface BusinessGridSectionProps {
     posts: Post[];
     isLoading: boolean;
     isLoggedIn: boolean;
+    currentUserRole?: 'owner' | 'user' | 'admin';
+    onCreatePostRequest: () => void;
 }
 
 export const BusinessGridSection: React.FC<BusinessGridSectionProps> = ({ 
     posts, 
     isLoading, 
-    isLoggedIn 
+    isLoggedIn,
+    currentUserRole,
+    onCreatePostRequest,
 }) => {
     const { t } = useTranslations();
 
@@ -28,7 +32,10 @@ export const BusinessGridSection: React.FC<BusinessGridSectionProps> = ({
                     <h2 className="text-3xl font-bold text-white tracking-tight">
                         {t('social.ecosystemTitle') || 'Social Ecosystem'}
                     </h2>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                        <button onClick={onCreatePostRequest} className="px-4 py-2 rounded-xl bg-primary/20 border border-primary/40 text-primary text-sm font-semibold">
+                            {currentUserRole === 'owner' || currentUserRole === 'admin' ? t('social.createPostCta') : t('social.ownerPostCta')}
+                        </button>
                         <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest">
                             {t('social.liveFeed') || 'Live Feed'}

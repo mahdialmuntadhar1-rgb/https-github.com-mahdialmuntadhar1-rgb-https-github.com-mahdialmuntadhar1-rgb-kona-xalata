@@ -11,13 +11,16 @@ import { CommunityStories } from './CommunityStories';
 import { CityGuide } from './CityGuide';
 import { InclusiveFeatures } from './InclusiveFeatures';
 import { FooterSection } from './FooterSection';
-import { useTranslations } from '../hooks/useTranslations';
-import type { Post, Category } from '../types';
+import { BusinessPostcardsSection } from './BusinessPostcardsSection';
+import type { Post, Category, User } from '../types';
 
 interface HomePageProps {
   posts: Post[];
   isSocialLoading: boolean;
   isLoggedIn: boolean;
+  currentUserRole?: User['role'];
+  onCreatePostRequest: () => void;
+  onJoinAsOwner: () => void;
   onCategoryClick: (category: Category) => void;
   currentPage: number;
   setCurrentPage: (page: number) => void;
@@ -32,6 +35,9 @@ export const HomePage: React.FC<HomePageProps> = ({
   posts,
   isSocialLoading,
   isLoggedIn,
+  currentUserRole,
+  onCreatePostRequest,
+  onJoinAsOwner,
   onCategoryClick,
   currentPage,
   setCurrentPage,
@@ -41,12 +47,10 @@ export const HomePage: React.FC<HomePageProps> = ({
   highContrast,
   setHighContrast,
 }) => {
-  const { t } = useTranslations();
-
   return (
     <div className="min-h-screen bg-dark-bg selection:bg-primary/30 selection:text-white">
-      <HeroSection />
-      <StoriesRing />
+      <HeroSection onJoinAsOwner={onJoinAsOwner} />
+      <StoriesRing selectedGovernorate={selectedGovernorate} />
       
       <CategoriesSection 
         onCategoryClick={onCategoryClick} 
@@ -60,6 +64,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                 posts={posts} 
                 isLoading={isSocialLoading} 
                 isLoggedIn={isLoggedIn} 
+                currentUserRole={currentUserRole}
+                onCreatePostRequest={onCreatePostRequest}
               />
               
               <SearchSection 
@@ -70,12 +76,13 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
       </div>
 
-      <FeaturedSection />
+      <FeaturedSection selectedGovernorate={selectedGovernorate} />
       
       <div className="space-y-32 py-24">
-        <PersonalizedEvents />
+        <PersonalizedEvents selectedGovernorate={selectedGovernorate} />
         <DealsMarketplace />
-        <CommunityStories />
+        <CommunityStories selectedGovernorate={selectedGovernorate} />
+        <BusinessPostcardsSection selectedGovernorate={selectedGovernorate} />
         <CityGuide />
       </div>
 
@@ -85,4 +92,3 @@ export const HomePage: React.FC<HomePageProps> = ({
     </div>
   );
 };
-

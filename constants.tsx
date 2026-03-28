@@ -957,6 +957,7 @@ export const translations = {
         sendMessage: "Send message...",
         noStories: "No stories shared yet.",
         latestStatus: "LATEST STATUS",
+        addSoon: "Add story (coming soon)",
     },
     filter: {
         governorate: "Filter by Governorate"
@@ -1156,7 +1157,12 @@ export const translations = {
     },
     actions: {
         book: "Book Now",
-        details: "View Details"
+        details: "View Details",
+        exploreMyCity: "Explore my city",
+        viewBusinesses: "View businesses",
+        seeTrending: "See what's trending",
+        joinBusinessOwner: "Join as business owner",
+        viewOnMap: "Open in maps"
     },
     events: {
         personalizedTitle: "Events, Personalized For You",
@@ -1179,6 +1185,9 @@ export const translations = {
             womenBusiness: { title: "Women in Business Networking Event", venue: "The Station, Baghdad" },
             familyDay: { title: "Family Fun Day at the Park", venue: "Sami Abdulrahman Park, Erbil" }
         }
+    },
+    postcards: {
+        title: "Business Postcards",
     },
     deals: {
         title: "Deals Marketplace",
@@ -1304,6 +1313,7 @@ export const translations = {
         orEmail: "Or continue with email",
         noAccount: "Don't have an account? Sign up",
         haveAccount: "Already have an account? Sign in",
+        emailComingSoon: "Email sign-in is coming soon. Please use Google for now.",
     },
     social: {
         ecosystemTitle: "Social Ecosystem",
@@ -1316,6 +1326,9 @@ export const translations = {
         postPlaceholder: "What's new with your business?",
         addPhoto: "Add Photo",
         post: "Post",
+        ownerOnlyPosting: "Only business owners can create posts. Switch to an owner account to continue.",
+        ownerPostCta: "Owner-only posting",
+        createPostCta: "Create post",
     },
     dashboard: {
         welcome: "Welcome",
@@ -1372,9 +1385,11 @@ export const translations = {
         communityTitle: "قصص المجتمع",
         business: "عمل تجاري",
         community: "مجتمع",
+        addYours: "أضف قصتك",
         sendMessage: "أرسل رسالة...",
         noStories: "لا توجد قصص منشورة بعد.",
         latestStatus: "آخر حالة",
+        addSoon: "إضافة قصة (قريباً)",
     },
     filter: {
         governorate: "التصفية حسب المحافظة"
@@ -1574,7 +1589,12 @@ export const translations = {
     },
     actions: {
         book: "احجز الآن",
-        details: "عرض التفاصيل"
+        details: "عرض التفاصيل",
+        exploreMyCity: "استكشف مدينتي",
+        viewBusinesses: "عرض الأعمال",
+        seeTrending: "شاهد الأكثر رواجاً",
+        joinBusinessOwner: "انضم كصاحب عمل",
+        viewOnMap: "فتح الخريطة"
     },
     events: {
         personalizedTitle: "فعاليات مخصصة لك",
@@ -1597,6 +1617,9 @@ export const translations = {
             womenBusiness: { title: "فعالية تواصل سيدات الأعمال", venue: "المحطة، بغداد" },
             familyDay: { title: "يوم ترفيهي عائلي في المنتزه", venue: "منتزه سامي عبد الرحمن، أربيل" }
         }
+    },
+    postcards: {
+        title: "بطاقات الأعمال",
     },
     deals: {
         title: "سوق العروض",
@@ -1722,6 +1745,7 @@ export const translations = {
         orEmail: "أو المتابعة عبر البريد الإلكتروني",
         noAccount: "ليس لديك حساب؟ سجل الآن",
         haveAccount: "لديك حساب بالفعل؟ سجل دخولك",
+        emailComingSoon: "تسجيل البريد الإلكتروني قريباً. استخدم Google حالياً.",
     },
     social: {
         ecosystemTitle: "النظام البيئي الاجتماعي",
@@ -1734,6 +1758,9 @@ export const translations = {
         postPlaceholder: "ما الجديد في عملك؟",
         addPhoto: "إضافة صورة",
         post: "نشر",
+        ownerOnlyPosting: "النشر مخصص لأصحاب الأعمال فقط.",
+        ownerPostCta: "نشر مخصص للمالك",
+        createPostCta: "إنشاء منشور",
     },
     dashboard: {
         welcome: "أهلاً بك",
@@ -1794,6 +1821,7 @@ export const translations = {
         sendMessage: "نامە بنێرە...",
         noStories: "هێشتا هیچ چیرۆکێک هاوبەش نەکراوە.",
         latestStatus: "دوایین بارودۆخ",
+        addSoon: "زیادکردنی ستۆری (بەمزووانە)",
     },
     filter: {
         governorate: "فلتەرکردن بەپێی پارێزگا"
@@ -1993,7 +2021,12 @@ export const translations = {
     },
     actions: {
         book: "ئێستا حیجز بکە",
-        details: "پیشاندانی وردەکاری"
+        details: "پیشاندانی وردەکاری",
+        exploreMyCity: "شارەکەم بگەڕێ",
+        viewBusinesses: "بینینی کارەکان",
+        seeTrending: "بینینی تریندەکان",
+        joinBusinessOwner: "وەک خاوەن کار بەشداربە",
+        viewOnMap: "کردنەوەی نەخشە"
     },
     events: {
         personalizedTitle: "بۆنەکان، تایبەت بۆ تۆ",
@@ -2016,6 +2049,9 @@ export const translations = {
             womenBusiness: { title: "بۆنەی تۆڕبەستنی ژنان لە کاردا", venue: "زە ستەیشن، بەغدا" },
             familyDay: { title: "ڕۆژی خۆشی خێزانی لە پارکەکەدا", venue: "پارکی سامی عەبدولڕەحمان، هەولێر" }
         }
+    },
+    postcards: {
+        title: "پۆستکاردی کارەکان",
     },
     deals: {
         title: "بازاڕی داشکاندنەکان",
@@ -2141,6 +2177,7 @@ export const translations = {
         orEmail: "یان بەردەوام بە بە ئیمەیڵ",
         noAccount: "هەژمارت نییە؟ ناوت تۆمار بکە",
         haveAccount: "پێشتر هەژمارت دروستکردووە؟ بچۆ ژوورەوە",
+        emailComingSoon: "چوونەژوورەوە بە ئیمەیڵ بەمزووانەیە. ئێستا Google بەکاربهێنە.",
     },
     social: {
         ecosystemTitle: "کۆمەڵگەی بازرگانی کۆمەڵایەتی",
@@ -2153,6 +2190,9 @@ export const translations = {
         postPlaceholder: "چی نوێ هەیە لە کارتدا؟",
         addPhoto: "وێنە زیاد بکە",
         post: "بڵاوکردنەوە",
+        ownerOnlyPosting: "تەنها خاوەن کار دەتوانێت پۆست دروست بکات.",
+        ownerPostCta: "پۆستکردنی تایبەت بە خاوەن کار",
+        createPostCta: "دروستکردنی پۆست",
     },
     dashboard: {
         welcome: "بەخێربێیت",

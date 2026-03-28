@@ -7,6 +7,7 @@ import { useTranslations } from '../hooks/useTranslations';
 export const DealsMarketplace: React.FC = () => {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [claimInfo, setClaimInfo] = useState<string | null>(null);
   const { t } = useTranslations();
 
   useEffect(() => {
@@ -71,7 +72,7 @@ export const DealsMarketplace: React.FC = () => {
                   <div className="h-full bg-gradient-to-r from-accent to-primary transition-all duration-500" style={{ width: `${(deal.claimed / deal.total) * 100}%` }} />
                 </div>
               </div>
-              <button className="w-full py-3 rounded-xl bg-gradient-to-r from-accent to-primary text-white font-semibold hover:shadow-glow-accent transition-all duration-200 flex items-center justify-center gap-2">
+              <button onClick={() => { setClaimInfo(`${deal.title} · ${t('deals.claimNow')}`); setTimeout(() => setClaimInfo(null), 2500); }} className="w-full py-3 rounded-xl bg-gradient-to-r from-accent to-primary text-white font-semibold hover:shadow-glow-accent transition-all duration-200 flex items-center justify-center gap-2">
                 <Tag className="w-4 h-4" />
                 {t('deals.claimNow')}
               </button>
@@ -79,6 +80,11 @@ export const DealsMarketplace: React.FC = () => {
           )))}
         </div>
       </div>
+      {claimInfo && (
+        <div className="fixed bottom-6 start-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-primary/20 border border-primary/40 text-primary z-50">
+          {claimInfo}
+        </div>
+      )}
     </section>
   );
 };

@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import type { Business } from '../types';
-import { Crown, Star, MapPin, Clock, ChevronRight, ChevronLeft } from './icons';
+import { Crown, Star, MapPin, ChevronRight, ChevronLeft } from './icons';
 import { useTranslations } from '../hooks/useTranslations';
 import { GlassCard } from './GlassCard';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 
-export const FeaturedBusinesses: React.FC = () => {
+interface FeaturedBusinessesProps {
+  selectedGovernorate: string;
+}
+
+export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selectedGovernorate }) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeBusiness, setActiveBusiness] = useState<Business | null>(null);
   const { t, lang } = useTranslations();
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
@@ -16,7 +21,7 @@ export const FeaturedBusinesses: React.FC = () => {
     const fetchFeatured = async () => {
       setIsLoading(true);
       try {
-        const result = await api.getBusinesses({ featuredOnly: true, limit: 10 });
+        const result = await api.getBusinesses({ featuredOnly: true, limit: 10, governorate: selectedGovernorate });
         setBusinesses(result.data);
       } catch (error) {
         console.error('Error fetching featured businesses:', error);
@@ -25,7 +30,7 @@ export const FeaturedBusinesses: React.FC = () => {
       }
     };
     fetchFeatured();
-  }, []);
+  }, [selectedGovernorate]);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -33,6 +38,10 @@ export const FeaturedBusinesses: React.FC = () => {
       const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth;
       scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
     }
+  };
+  const localizeGov = (value?: string) => {
+    if (!value) return t('governorates.baghdad');
+    return t(`governorates.${value.toLowerCase().replace(/\\s+/g, '_')}`);
   };
 
   if (isLoading) {
@@ -45,7 +54,7 @@ export const FeaturedBusinesses: React.FC = () => {
   }
 
   return (
-    <section className="py-24 relative overflow-hidden">
+    <section id="featured-businesses" className="py-24 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none" />
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
@@ -140,17 +149,17 @@ export const FeaturedBusinesses: React.FC = () => {
                         <h3 className="text-white font-bold text-2xl mb-2 group-hover:text-primary transition-colors">{displayName}</h3>
                         <div className="flex items-center gap-2 text-white/40 text-sm">
                           <MapPin className="w-4 h-4 text-primary" />
-                          <span>{business.governorate || 'Baghdad'}</span>
+                          <span>{localizeGov(business.governorate)}</span>
                           <span className="w-1 h-1 rounded-full bg-white/20" />
                           <span>{t(`categories.${business.category}`)}</span>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
-                        <button className="px-5 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-bold text-sm hover:shadow-glow-primary transition-all duration-300 transform active:scale-95">
+                        <button onClick={() => setActiveBusiness(business)} className="px-5 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-bold text-sm hover:shadow-glow-primary transition-all duration-300 transform active:scale-95">
                           {t('actions.book')}
                         </button>
-                        <button className="px-5 py-3 rounded-xl backdrop-blur-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all duration-300 transform active:scale-95">
+                        <button onClick={() => setActiveBusiness(business)} className="px-5 py-3 rounded-xl backdrop-blur-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all duration-300 transform active:scale-95">
                           {t('actions.details')}
                         </button>
                       </div>
@@ -162,7 +171,18 @@ export const FeaturedBusinesses: React.FC = () => {
           )}
         </div>
       </div>
+      {activeBusiness && (
+        <div className="fixed inset-0 z-50 bg-black/70 p-4 flex items-center justify-center" onClick={() => setActiveBusiness(null)}>
+          <div className="max-w-lg w-full rounded-2xl bg-dark-bg border border-white/10 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <img src={activeBusiness.coverImage || activeBusiness.imageUrl} alt={activeBusiness.name} className="w-full h-56 object-cover" />
+            <div className="p-5">
+              <h3 className="text-2xl text-white font-bold mb-2">{activeBusiness.name}</h3>
+              <p className="text-white/70 mb-4">{activeBusiness.description || t('featured.subtitle')}</p>
+              <div className="text-white/60 text-sm">{activeBusiness.address || activeBusiness.city}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
-

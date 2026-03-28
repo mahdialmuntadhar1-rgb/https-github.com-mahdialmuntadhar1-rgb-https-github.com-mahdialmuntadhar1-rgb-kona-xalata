@@ -6,13 +6,21 @@ import { supabase } from '../services/supabase';
 interface AuthModalProps {
     onClose: () => void;
     onLogin: (role: 'user' | 'owner') => void;
+    initialRole?: 'user' | 'owner';
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin, initialRole = 'user' }) => {
     const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
-    const [role, setRole] = useState<'user' | 'owner'>('user');
+    const [role, setRole] = useState<'user' | 'owner'>(initialRole);
     const [isLoading, setIsLoading] = useState(false);
     const { t } = useTranslations();
+
+    React.useEffect(() => {
+        setRole(initialRole);
+        if (initialRole === 'owner') {
+            setActiveTab('signup');
+        }
+    }, [initialRole]);
     
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
@@ -22,14 +30,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.href,
+                    redirectTo: `${window.location.origin}${window.location.pathname}`,
                 },
             });
 
             if (error) {
                 throw error;
             }
-
             onLogin(role);
         } catch (error) {
             console.error('Google Sign-In Error:', error);
@@ -99,12 +106,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onLogin }) => {
                         </div>
                     </div>
 
-                    <div className="space-y-4 opacity-50 pointer-events-none">
+                    <div className="space-y-4 opacity-50 pointer-events-none" aria-disabled>
                         <input type="email" placeholder={t('auth.email')} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none" />
                         <input type="password" placeholder={t('auth.password')} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none" />
                         <button className="w-full py-3 rounded-xl bg-white/10 text-white/40 font-semibold">
                             {activeTab === 'signin' ? t('auth.signIn') : t('auth.createAccount')}
                         </button>
+                        <p className="text-center text-xs text-white/60">{t('auth.emailComingSoon')}</p>
                     </div>
 
                     <div className="text-center">

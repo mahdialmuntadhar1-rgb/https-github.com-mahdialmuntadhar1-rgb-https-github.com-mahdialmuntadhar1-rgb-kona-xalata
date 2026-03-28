@@ -5,7 +5,11 @@ import { Briefcase, Users, ShieldCheck, Plus } from './icons';
 import { StoryViewer } from './StoryViewer';
 import { useTranslations } from '../hooks/useTranslations';
 
-export const CommunityStories: React.FC = () => {
+interface CommunityStoriesProps {
+  selectedGovernorate: string;
+}
+
+export const CommunityStories: React.FC<CommunityStoriesProps> = ({ selectedGovernorate }) => {
   const [stories, setStories] = useState<Story[]>([]);
   const [activeStory, setActiveStory] = useState<Story | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,8 +19,13 @@ export const CommunityStories: React.FC = () => {
     const fetchStories = async () => {
       setIsLoading(true);
       try {
-        const data = await api.getStories();
-        setStories(data);
+        const data = await api.getStories(selectedGovernorate);
+        const hasGovernorateTags = data.some((story) => Boolean(story.governorate));
+        setStories(
+          selectedGovernorate === 'all' || !hasGovernorateTags
+            ? data
+            : data.filter((story) => story.governorate === selectedGovernorate),
+        );
       } catch (error) {
         console.error('Error fetching stories:', error);
       } finally {
@@ -24,7 +33,7 @@ export const CommunityStories: React.FC = () => {
       }
     };
     fetchStories();
-  }, []);
+  }, [selectedGovernorate]);
 
   if (isLoading) {
     return (
@@ -78,11 +87,11 @@ export const CommunityStories: React.FC = () => {
               </div>
             </div>
           )))}
-          <div className="aspect-[9/16] rounded-2xl backdrop-blur-xl bg-white/5 border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer">
+          <div className="aspect-[9/16] rounded-2xl backdrop-blur-xl bg-white/5 border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-3 cursor-not-allowed opacity-80">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <Plus className="w-6 h-6 text-white" />
             </div>
-            <span className="text-white/80 text-sm font-medium">{t('stories.addYours')}</span>
+            <span className="text-white/80 text-sm font-medium">{t('stories.addSoon')}</span>
           </div>
         </div>
       </div>

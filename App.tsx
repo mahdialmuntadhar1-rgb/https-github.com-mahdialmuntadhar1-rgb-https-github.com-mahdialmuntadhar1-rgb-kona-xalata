@@ -76,6 +76,7 @@ const MainContent: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authPreferredRole, setAuthPreferredRole] = useState<'user' | 'owner'>('user');
   const [page, setPage] = useState<'home' | 'dashboard' | 'listing'>('home');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -84,6 +85,7 @@ const MainContent: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isSocialLoading, setIsSocialLoading] = useState(true);
+  const [ownerOnlyMessage, setOwnerOnlyMessage] = useState<string | null>(null);
   const [highContrast, setHighContrast] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('iraq-compass-high-contrast') === 'true';
@@ -135,12 +137,20 @@ const MainContent: React.FC = () => {
 
   useEffect(() => {
     setIsSocialLoading(true);
-    const unsubscribe = api.subscribeToPosts((newPosts) => {
-      setPosts(newPosts);
+    const fetchPosts = async () => {
+      const data = await api.getPosts(selectedGovernorate);
+      const hasGovernorateTags = data.some((post) => Boolean(post.governorate));
+      setPosts(
+        selectedGovernorate === 'all'
+          ? data
+          : hasGovernorateTags
+            ? data.filter((post) => post.governorate === selectedGovernorate)
+            : data,
+      );
       setIsSocialLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    };
+    void fetchPosts();
+  }, [selectedGovernorate]);
 
   useEffect(() => {
     if (highContrast) {
@@ -168,6 +178,7 @@ const MainContent: React.FC = () => {
   
   const navigateTo = (targetPage: 'home' | 'dashboard') => {
       if (targetPage === 'dashboard' && !isLoggedIn) {
+          setAuthPreferredRole('user');
           setShowAuthModal(true);
       } else {
           setPage(targetPage);
@@ -205,6 +216,26 @@ const MainContent: React.FC = () => {
     }
   };
 
+  const handleCreatePostRequest = () => {
+    if (!isLoggedIn) {
+      setAuthPreferredRole('user');
+      setShowAuthModal(true);
+      return;
+    }
+    if (currentUser?.role !== 'owner' && currentUser?.role !== 'admin') {
+      setOwnerOnlyMessage(t('social.ownerOnlyPosting'));
+      setTimeout(() => setOwnerOnlyMessage(null), 3000);
+      return;
+    }
+    setPage('dashboard');
+  };
+
+  const handleJoinAsOwner = () => {
+    sessionStorage.setItem('pending_role', 'owner');
+    setAuthPreferredRole('owner');
+    setShowAuthModal(true);
+  };
+
   if (!isAuthReady) {
     return (
       <div className="min-h-screen bg-dark-bg flex items-center justify-center">
@@ -237,6 +268,9 @@ const MainContent: React.FC = () => {
                 posts={posts}
                 isSocialLoading={isSocialLoading}
                 isLoggedIn={isLoggedIn}
+                currentUserRole={currentUser?.role}
+                onCreatePostRequest={handleCreatePostRequest}
+                onJoinAsOwner={handleJoinAsOwner}
                 onCategoryClick={handleCategoryClick}
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
@@ -275,7 +309,12 @@ const MainContent: React.FC = () => {
           )}
         </AnimatePresence>
       </main>
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onLogin={handleLogin} />}
+      {ownerOnlyMessage && (
+        <div className="fixed bottom-6 start-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-accent/20 border border-accent/40 text-accent backdrop-blur-xl">
+          {ownerOnlyMessage}
+        </div>
+      )}
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onLogin={handleLogin} initialRole={authPreferredRole} />}
       <SubcategoryModal 
         category={selectedCategory} 
         onClose={() => setSelectedCategory(null)}
