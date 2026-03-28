@@ -5,13 +5,13 @@ import { CategoriesSection } from './CategoriesSection';
 import { BusinessGridSection } from './BusinessGridSection';
 import { SearchSection } from './SearchSection';
 import { FeaturedSection } from './FeaturedSection';
+import { BusinessPostcardsSection } from './BusinessPostcardsSection';
 import { PersonalizedEvents } from './PersonalizedEvents';
 import { DealsMarketplace } from './DealsMarketplace';
 import { CommunityStories } from './CommunityStories';
 import { CityGuide } from './CityGuide';
 import { InclusiveFeatures } from './InclusiveFeatures';
 import { FooterSection } from './FooterSection';
-import { useTranslations } from '../hooks/useTranslations';
 import type { Post, Category } from '../types';
 
 interface HomePageProps {
@@ -26,7 +26,9 @@ interface HomePageProps {
   onGovernorateChange: (gov: string) => void;
   highContrast: boolean;
   setHighContrast: (val: boolean) => void;
+  onHeroAction: (action: 'explore_city' | 'view_businesses' | 'trending' | 'join_owner') => void;
 }
+
 
 export const HomePage: React.FC<HomePageProps> = ({
   posts,
@@ -40,13 +42,12 @@ export const HomePage: React.FC<HomePageProps> = ({
   onGovernorateChange,
   highContrast,
   setHighContrast,
+  onHeroAction,
 }) => {
-  const { t } = useTranslations();
-
   return (
     <div className="min-h-screen bg-dark-bg selection:bg-primary/30 selection:text-white">
-      <HeroSection />
-      <StoriesRing />
+      <HeroSection onAction={onHeroAction} />
+      <StoriesRing selectedGovernorate={selectedGovernorate} />
       
       <CategoriesSection 
         onCategoryClick={onCategoryClick} 
@@ -70,12 +71,13 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
       </div>
 
-      <FeaturedSection />
+      <FeaturedSection selectedGovernorate={selectedGovernorate} onExploreBusinesses={(filter) => onSearch(filter)} />
+      <BusinessPostcardsSection selectedGovernorate={selectedGovernorate} onViewBusiness={(city) => onSearch(city)} />
       
       <div className="space-y-32 py-24">
-        <PersonalizedEvents />
-        <DealsMarketplace />
-        <CommunityStories />
+        <PersonalizedEvents selectedGovernorate={selectedGovernorate} />
+        <DealsMarketplace selectedGovernorate={selectedGovernorate} />
+        <CommunityStories selectedGovernorate={selectedGovernorate} />
         <CityGuide />
       </div>
 

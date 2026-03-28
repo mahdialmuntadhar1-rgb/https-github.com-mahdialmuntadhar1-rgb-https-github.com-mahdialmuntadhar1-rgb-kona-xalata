@@ -3,7 +3,11 @@ import { heroSlides } from '../constants';
 import { useTranslations } from '../hooks/useTranslations';
 import { motion, AnimatePresence } from 'motion/react';
 
-export const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+    onAction: (action: 'explore_city' | 'view_businesses' | 'trending' | 'join_owner') => void;
+}
+
+export const HeroSection: React.FC<HeroSectionProps> = ({ onAction }) => {
     const [activeSlide, setActiveSlide] = React.useState(0);
     const { t } = useTranslations();
 
@@ -25,10 +29,10 @@ export const HeroSection: React.FC = () => {
                     transition={{ duration: 1 }}
                     className="absolute inset-0 w-full h-full"
                 >
-                    <img 
-                        src={heroSlides[activeSlide].image} 
-                        alt={t(heroSlides[activeSlide].titleKey)} 
-                        className="absolute inset-0 w-full h-full object-cover scale-105" 
+                    <img
+                        src={heroSlides[activeSlide].image}
+                        alt={t(heroSlides[activeSlide].titleKey)}
+                        className="absolute inset-0 w-full h-full object-cover scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-dark-bg/40 via-dark-bg/60 to-dark-bg"></div>
                 </motion.div>
@@ -53,30 +57,36 @@ export const HeroSection: React.FC = () => {
                             {t(heroSlides[activeSlide].subtitleKey)}
                         </p>
                         <div className="flex flex-wrap gap-4 justify-center">
-                            <button className="px-8 py-4 rounded-full bg-primary text-white font-semibold hover:shadow-glow-primary transition-all duration-300 transform hover:scale-105">
-                                {t('actions.exploreNow') || 'Explore Now'}
+                            <button onClick={() => onAction('explore_city')} className="px-8 py-4 rounded-full bg-primary text-white font-semibold hover:shadow-glow-primary transition-all duration-300 transform hover:scale-105">
+                                {t('hero.cta.exploreCity')}
                             </button>
-                            <button className="px-8 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold hover:bg-white/20 transition-all duration-300">
-                                {t('actions.learnMore') || 'Learn More'}
+                            <button onClick={() => onAction('view_businesses')} className="px-8 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold hover:bg-white/20 transition-all duration-300">
+                                {t('hero.cta.viewBusinesses')}
+                            </button>
+                            <button onClick={() => onAction('trending')} className="px-8 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold hover:bg-white/20 transition-all duration-300">
+                                {t('hero.cta.seeTrending')}
+                            </button>
+                            <button onClick={() => onAction('join_owner')} className="px-8 py-4 rounded-full bg-secondary/80 backdrop-blur-md border border-secondary/60 text-white font-semibold hover:bg-secondary transition-all duration-300">
+                                {t('hero.cta.joinOwner')}
                             </button>
                         </div>
                     </motion.div>
                 </AnimatePresence>
             </div>
-            
+
             <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex gap-3 items-center">
                 {heroSlides.map((_, index) => (
-                    <button 
-                        key={index} 
-                        onClick={() => setActiveSlide(index)} 
-                        className={`group relative h-1.5 transition-all duration-500 rounded-full overflow-hidden ${activeSlide === index ? 'w-12 bg-primary' : 'w-6 bg-white/20 hover:bg-white/40'}`} 
+                    <button
+                        key={index}
+                        onClick={() => setActiveSlide(index)}
+                        className={`group relative h-1.5 transition-all duration-500 rounded-full overflow-hidden ${activeSlide === index ? 'w-12 bg-primary' : 'w-6 bg-white/20 hover:bg-white/40'}`}
                         aria-label={`Go to slide ${index + 1}`}
                     >
                         {activeSlide === index && (
-                            <motion.div 
+                            <motion.div
                                 initial={{ x: '-100%' }}
                                 animate={{ x: '0%' }}
-                                transition={{ duration: 6, ease: "linear" }}
+                                transition={{ duration: 6, ease: 'linear' }}
                                 className="absolute inset-0 bg-white/30"
                             />
                         )}

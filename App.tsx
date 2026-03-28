@@ -8,11 +8,12 @@ import { HomePage } from './components/HomePage';
 import { api } from './services/api';
 import { supabase } from './services/supabase';
 import type { User, Category, Subcategory, Post } from './types';
-import { TranslationProvider, useTranslations } from './hooks/useTranslations';
+import { TranslationProvider } from './hooks/useTranslations';
 import { motion, AnimatePresence } from 'motion/react';
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 
 import { translations } from './constants';
+import { mockData, normalizeGovernorate } from './services/mockData';
 
 const getTranslation = (key: string) => {
   const lang = (localStorage.getItem('iraq-compass-lang') as 'en' | 'ar' | 'ku') || 'en';
@@ -71,7 +72,6 @@ class ErrorBoundary extends (React.Component as any) {
 }
 
 const MainContent: React.FC = () => {
-  const { t } = useTranslations();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -81,7 +81,6 @@ const MainContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [listingFilter, setListingFilter] = useState<{ categoryId?: string; city?: string; governorate?: string } | null>(null);
   const [selectedGovernorate, setSelectedGovernorate] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isSocialLoading, setIsSocialLoading] = useState(true);
   const [highContrast, setHighContrast] = useState(() => {
@@ -98,13 +97,21 @@ const MainContent: React.FC = () => {
       if (!mounted) return;
 
       if (authUser) {
+        const roleFromQuery = new URLSearchParams(window.location.search).get('role');
         const pendingRole = sessionStorage.getItem('pending_role') as 'user' | 'owner' | null;
-        const user = await api.getOrCreateProfile(authUser, pendingRole || 'user');
+        const resolvedRole = (pendingRole || (roleFromQuery === 'owner' ? 'owner' : 'user')) as 'user' | 'owner';
+        const user = await api.getOrCreateProfile(authUser, resolvedRole);
 
         if (!mounted) return;
         setCurrentUser(user);
         setIsLoggedIn(!!user);
         sessionStorage.removeItem('pending_role');
+
+        if (roleFromQuery) {
+          const next = new URL(window.location.href);
+          next.searchParams.delete('role');
+          window.history.replaceState({}, document.title, `${next.pathname}${next.search}${next.hash}`);
+        }
       } else {
         setCurrentUser(null);
         setIsLoggedIn(false);
@@ -136,11 +143,12 @@ const MainContent: React.FC = () => {
   useEffect(() => {
     setIsSocialLoading(true);
     const unsubscribe = api.subscribeToPosts((newPosts) => {
-      setPosts(newPosts);
+      const fallbackPosts = mockData.posts(selectedGovernorate);
+      setPosts(newPosts.length > 0 ? newPosts : fallbackPosts);
       setIsSocialLoading(false);
-    });
+    }, selectedGovernorate);
     return () => unsubscribe();
-  }, []);
+  }, [selectedGovernorate]);
 
   useEffect(() => {
     if (highContrast) {
@@ -193,18 +201,50 @@ const MainContent: React.FC = () => {
   };
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
     setListingFilter({ city: query, governorate: selectedGovernorate !== 'all' ? selectedGovernorate : undefined });
     setPage('listing');
   };
 
   const handleGovernorateChange = (gov: string) => {
-    setSelectedGovernorate(gov);
+    const normalized = normalizeGovernorate(gov);
+    setSelectedGovernorate(normalized);
     if (page === 'listing') {
-        setListingFilter(prev => ({ ...prev, governorate: gov !== 'all' ? gov : undefined }));
+        setListingFilter(prev => ({ ...prev, governorate: normalized !== 'all' ? normalized : undefined }));
     }
   };
 
+
+  const handleHeroAction = (action: 'explore_city' | 'view_businesses' | 'trending' | 'join_owner') => {
+    if (action === 'explore_city') {
+      handleSearch(selectedGovernorate === 'all' ? '' : selectedGovernorate);
+      return;
+    }
+
+    if (action === 'view_businesses') {
+      setListingFilter({ governorate: selectedGovernorate !== 'all' ? selectedGovernorate : undefined });
+      setPage('listing');
+      return;
+    }
+
+    if (action === 'trending') {
+      const section = document.querySelector('section[data-section="trending"]');
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    if (!isLoggedIn) {
+      sessionStorage.setItem('pending_role', 'owner');
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (currentUser?.role !== 'owner' && currentUser?.role !== 'admin') {
+      setPage('dashboard');
+      return;
+    }
+
+    setPage('dashboard');
+  };
   if (!isAuthReady) {
     return (
       <div className="min-h-screen bg-dark-bg flex items-center justify-center">
@@ -245,6 +285,7 @@ const MainContent: React.FC = () => {
                 onGovernorateChange={handleGovernorateChange}
                 highContrast={highContrast}
                 setHighContrast={setHighContrast}
+                onHeroAction={handleHeroAction}
               />
             </motion.div>
           )}

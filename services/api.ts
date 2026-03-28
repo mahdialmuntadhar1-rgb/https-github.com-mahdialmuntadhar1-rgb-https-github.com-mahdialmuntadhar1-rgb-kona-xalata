@@ -95,16 +95,22 @@ export const api = {
     }
   },
 
-  subscribeToPosts(callback: (posts: Post[]) => void) {
+  subscribeToPosts(callback: (posts: Post[]) => void, governorate: string = 'all') {
     const path = 'posts';
 
     const fetchPosts = async () => {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from(path)
           .select('*')
           .order('createdAt', { ascending: false })
           .limit(50);
+
+        if (governorate && governorate !== 'all') {
+          query = query.eq('governorate', governorate);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
@@ -135,15 +141,21 @@ export const api = {
     };
   },
 
-  async getDeals() {
+  async getDeals(governorate?: string) {
     const path = 'deals';
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from(path)
         .select('*')
         .order('createdAt', { ascending: false })
         .limit(10);
+
+      if (governorate && governorate !== 'all') {
+        query = query.eq('governorate', governorate);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data || [];
@@ -153,15 +165,21 @@ export const api = {
     }
   },
 
-  async getStories() {
+  async getStories(governorate?: string) {
     const path = 'stories';
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from(path)
         .select('*')
         .order('createdAt', { ascending: false })
         .limit(20);
+
+      if (governorate && governorate !== 'all') {
+        query = query.eq('governorate', governorate);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data || [];

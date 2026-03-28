@@ -947,6 +947,12 @@ export const translations = {
         slide2Subtitle: "Experience authentic Iraqi culture, cuisine, and hospitality with our curated guides and stories.",
         slide3Title: "Connect with the Community",
         slide3Subtitle: "Join events, support local businesses, and share your experiences with a vibrant community.",
+        cta: {
+            exploreCity: "Explore my city",
+            viewBusinesses: "View businesses",
+            seeTrending: "See what's trending",
+            joinOwner: "Join as business owner"
+        }
     },
     stories: {
         add: "Add Yours",
@@ -1156,7 +1162,9 @@ export const translations = {
     },
     actions: {
         book: "Book Now",
-        details: "View Details"
+        details: "View Details",
+        exploreNow: "Explore now",
+        close: "Close"
     },
     events: {
         personalizedTitle: "Events, Personalized For You",
@@ -1186,6 +1194,7 @@ export const translations = {
         claimed: "Claimed",
         claimNow: "Claim Now",
         noDeals: "No active deals at the moment.",
+        claimedToast: "Deal claimed in prototype mode.",
         items: {
             zaytona: { title: "Off on All Main Courses", description: "Enjoy a delicious discount at Zaytona Restaurant.", expires: "3 Days" },
             fitness: { title: "Off Your First Month", description: "Join Fitness World Gym and get half price.", expires: "1 Week" },
@@ -1285,6 +1294,14 @@ export const translations = {
             previewText: "This is some sample text.",
         }
     },
+    common: {
+        comingSoon: "Coming soon"
+    },
+    postcards: {
+        title: "Business Postcards",
+        viewInDirectory: "View in directory",
+        openMap: "Open map"
+    },
     auth: {
         signIn: "Sign In",
         signUp: "Sign Up",
@@ -1304,6 +1321,7 @@ export const translations = {
         orEmail: "Or continue with email",
         noAccount: "Don't have an account? Sign up",
         haveAccount: "Already have an account? Sign in",
+        emailComingSoon: "Email sign-in is coming soon",
     },
     social: {
         ecosystemTitle: "Social Ecosystem",
@@ -1330,6 +1348,8 @@ export const translations = {
         postError: "Failed to create post.",
         profileSuccess: "Profile updated successfully!",
         profileError: "Failed to update profile.",
+        ownerPostingOnly: "Posting is available for business owners only.",
+        ownerPostingHelp: "Create a Business Owner account to publish updates and offers.",
     },
     activity: {
         favorite: "Added to favorites",
@@ -1574,7 +1594,9 @@ export const translations = {
     },
     actions: {
         book: "احجز الآن",
-        details: "عرض التفاصيل"
+        details: "عرض التفاصيل",
+        exploreNow: "استكشف الآن",
+        close: "إغلاق"
     },
     events: {
         personalizedTitle: "فعاليات مخصصة لك",
@@ -1604,6 +1626,7 @@ export const translations = {
         claimed: "تم الحصول عليها",
         claimNow: "احصل عليها الآن",
         noDeals: "لا توجد عروض نشطة في الوقت الحالي.",
+        claimedToast: "تم حفظ العرض في وضع النموذج التجريبي.",
         items: {
             zaytona: { title: "خصم على جميع الأطباق الرئيسية", description: "استمتع بخصم لذيذ في مطعم زيتونة.", expires: "3 أيام" },
             fitness: { title: "خصم على شهرك الأول", description: "انضم إلى فيتنس وورلد جيم واحصل على نصف السعر.", expires: "أسبوع واحد" },
@@ -1703,6 +1726,14 @@ export const translations = {
             previewText: "هذا نص تجريبي.",
         }
     },
+    common: {
+        comingSoon: "قريباً"
+    },
+    postcards: {
+        title: "بطاقات الأعمال",
+        viewInDirectory: "عرض في الدليل",
+        openMap: "فتح الخريطة"
+    },
     auth: {
         signIn: "تسجيل الدخول",
         signUp: "إنشاء حساب",
@@ -1722,6 +1753,7 @@ export const translations = {
         orEmail: "أو المتابعة عبر البريد الإلكتروني",
         noAccount: "ليس لديك حساب؟ سجل الآن",
         haveAccount: "لديك حساب بالفعل؟ سجل دخولك",
+        emailComingSoon: "تسجيل الدخول بالبريد قريباً",
     },
     social: {
         ecosystemTitle: "النظام البيئي الاجتماعي",
@@ -1748,6 +1780,8 @@ export const translations = {
         postError: "فشل إنشاء المنشور.",
         profileSuccess: "تم تحديث الملف الشخصي بنجاح!",
         profileError: "فشل تحديث الملف الشخصي.",
+        ownerPostingOnly: "النشر متاح فقط لأصحاب الأعمال.",
+        ownerPostingHelp: "أنشئ حساب صاحب عمل لنشر التحديثات والعروض.",
     },
     activity: {
         favorite: "أضيف إلى المفضلة",
@@ -2023,6 +2057,7 @@ export const translations = {
         claimed: "داواکراو",
         claimNow: "ئێستا داوای بکە",
         noDeals: "لە ئێستادا هیچ داشکاندنێکی چالاک نییە.",
+        claimedToast: "ئۆفەرەکە لە مۆدی نموونەدا پاشەکەوت کرا.",
         items: {
             zaytona: { title: "داشکاندن لەسەر هەموو ژەمە سەرەکییەکان", description: "چێژ لە داشکاندنێکی بەتام وەربگرە لە چێشتخانەی زەیتونە.", expires: "٣ ڕۆژ" },
             fitness: { title: "داشکاندن لەسەر مانگی یەکەمت", description: "ببە بە ئەندام لە فیتنس وۆرڵد جیم و نیوەی نرخەکە وەربگرە.", expires: "١ هەفتە" },
@@ -2122,6 +2157,14 @@ export const translations = {
             previewText: "ئەمە دەقێکی نموونەییە.",
         }
     },
+    common: {
+        comingSoon: "بەمزووانە"
+    },
+    postcards: {
+        title: "پۆستکاردی بزنس",
+        viewInDirectory: "بینین لە ڕێنمایی",
+        openMap: "کردنەوەی نەخشە"
+    },
     auth: {
         signIn: "چوونەژوورەوە",
         signUp: "هەژمار دروستکردن",
@@ -2141,6 +2184,7 @@ export const translations = {
         orEmail: "یان بەردەوام بە بە ئیمەیڵ",
         noAccount: "هەژمارت نییە؟ ناوت تۆمار بکە",
         haveAccount: "پێشتر هەژمارت دروستکردووە؟ بچۆ ژوورەوە",
+        emailComingSoon: "چوونەژوورەوە بە ئیمەیڵ بەمزووانەیە",
     },
     social: {
         ecosystemTitle: "کۆمەڵگەی بازرگانی کۆمەڵایەتی",
@@ -2167,6 +2211,8 @@ export const translations = {
         postError: "دروستکردنی پۆستەکە سەرکەوتوو نەبوو.",
         profileSuccess: "پرۆفایلەکە بە سەرکەوتوویی نوێکرایەوە!",
         profileError: "نوێکردنەوەی پرۆفایلەکە سەرکەوتوو نەبوو.",
+        ownerPostingOnly: "پۆستکردن تەنها بۆ خاوەن کارانە.",
+        ownerPostingHelp: "هەژماری خاوەن کار دروست بکە بۆ بڵاوکردنەوەی نوێکاری و ئۆفەرەکان.",
     },
     activity: {
         favorite: "زیادکرا بۆ دڵخوازەکان",

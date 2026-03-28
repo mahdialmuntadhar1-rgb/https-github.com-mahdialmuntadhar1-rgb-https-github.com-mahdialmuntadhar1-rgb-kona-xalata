@@ -18,6 +18,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     const [statusMsg, setStatusMsg] = React.useState<{ type: 'success' | 'error', text: string } | null>(null);
     
     const handleCreatePost = async (postData: Partial<Post>) => {
+        if (user.role !== 'owner' && user.role !== 'admin') {
+            setStatusMsg({ type: 'error', text: t('dashboard.ownerPostingOnly') || 'Posting is available for business owners only.' });
+            setTimeout(() => setStatusMsg(null), 3000);
+            return;
+        }
+
         try {
             const result = await api.createPost({
                 ...postData,
@@ -120,6 +126,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <DataArchitect />
             ) : (
                 <>
+
+                    {user.role === 'user' && (
+                        <div className="max-w-2xl mx-auto mb-12">
+                            <GlassCard className="p-6 border-amber-400/30 bg-amber-500/5">
+                                <h2 className="text-xl font-bold text-white mb-2">{t('dashboard.ownerPostingOnly') || 'Posting is available for business owners only.'}</h2>
+                                <p className="text-white/70 text-sm">{t('dashboard.ownerPostingHelp') || 'Create a Business Owner account to publish updates and offers to the feed.'}</p>
+                            </GlassCard>
+                        </div>
+                    )}
                     {user.role === 'owner' && user.businessId && (
                         <div className="max-w-2xl mx-auto mb-12">
                             <h2 className="text-2xl font-bold text-white mb-6">{t('dashboard.createPost') || "Create a Post"}</h2>
