@@ -1,27 +1,23 @@
 # TODO_LAUNCH_BLOCKERS.md
 
+Date: 2026-03-30
+
 ## Critical blockers
-- [ ] Run dependency install + compile gates in a normal networked environment:
-  - `npm install`
-  - `npm run lint`
-  - `npm run build`
-- [ ] Confirm production Supabase project has migration `supabase/migrations/20260328_bootstrap_public_tables.sql` applied (including `governorate` columns for `posts` and `stories`).
+- [x] Fix category filtering/schema mismatch by supporting canonical category IDs and legacy human-readable labels in Supabase queries.
+- [x] Fix event tab category mapping to valid taxonomy keys used in data.
+- [x] Fix invalid SQL seed insert for `business_postcards` in migration.
+- [x] Replace unsafe `users` public-read policy with authenticated self-access policies.
 
 ## High-priority fixes
-- [x] Removed runtime mock-data fallback path (`services/mockData.ts` and all consumers).
-- [x] Removed Gemini package + env dependency and AI Studio import-map leftovers.
-- [x] Updated package identity/version to production naming.
-- [x] Rewrote README + env requirements for Supabase-only setup.
-- [x] Added `.env.example` with only required runtime vars.
-- [x] Added explicit error/empty handling instead of fake fallback data in key data sections.
+- [x] Remove hidden governorate fallback behavior in social posts (home feed) and stories.
+- [x] Wire directory minimum rating filter into Supabase query.
+- [x] Correct postcards empty-state messaging.
 
-## Nice-to-have cleanup
-- [ ] Prune large unused static demo exports in `constants.tsx` that are no longer consumed at runtime.
-- [ ] Replace placeholder image fallbacks with branded static assets.
-- [ ] Add dedicated integration tests around governorate filtering behavior.
+## Medium-priority cleanup
+- [x] Replace generic random placeholder image fallback in listing/featured cards with stable assets/URLs.
+- [x] Refresh audit/final/handoff/changelog docs to match real post-fix repository state.
 
-## Requires external credentials/manual setup
-- [ ] Supabase dashboard: verify RLS policies for anon vs authenticated write paths match desired launch permissions.
-- [ ] Hosting dashboard: set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-- [ ] Supabase Auth dashboard: verify production OAuth redirect URLs.
-- [ ] Run final production smoke test against real Supabase data.
+## Manual credential/dashboard tasks
+- [ ] Set production `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in hosting.
+- [ ] Ensure Supabase Auth redirect URLs include the production domain.
+- [ ] Confirm RLS and migration are applied in production project before go-live.

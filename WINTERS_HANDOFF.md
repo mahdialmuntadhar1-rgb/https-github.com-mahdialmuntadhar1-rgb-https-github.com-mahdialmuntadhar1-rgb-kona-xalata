@@ -1,20 +1,8 @@
 # WINTERS_HANDOFF.md
 
-1. Set production hosting environment variables:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-
-2. In Supabase SQL editor, ensure migration `supabase/migrations/20260328_bootstrap_public_tables.sql` is applied.
-
-3. In Supabase Auth settings, verify Google OAuth + redirect URLs include the production domain.
-
-4. In a normal networked CI/local environment, run:
-   - `npm install`
-   - `npm run lint`
-   - `npm run build`
-
-5. Deploy and run a short smoke test on live domain:
-   - home feed loads
-   - business directory filtering/search works
-   - featured/events/postcards/stories load from real DB
-   - owner/admin dashboard can create post and update profile
+1. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in production hosting environment.
+2. Apply `supabase/migrations/20260328_bootstrap_public_tables.sql` to the production Supabase project.
+3. Confirm Supabase Auth redirect URLs include the final production domain.
+4. Redeploy production.
+5. Smoke test: business listing, search, governorate/category/rating filters, events tabs, postcards modal/details, and pagination/load-more.
+6. Confirm production domain behavior (no auth redirect mismatch, no data-access policy errors).

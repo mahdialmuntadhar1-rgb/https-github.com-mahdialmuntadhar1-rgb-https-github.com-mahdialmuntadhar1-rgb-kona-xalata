@@ -60,11 +60,29 @@ const resolveGovernorateFilter = (value?: string) => {
   if (!value || value === 'all') return undefined;
   return governorateValueMap[value.toLowerCase()] || value;
 };
+
+const categoryValueMap: Record<string, string[]> = {
+  food_drink: ['food_drink', 'Food & Drink'],
+  shopping: ['shopping', 'Shopping'],
+  events_entertainment: ['events_entertainment', 'Events & Entertainment'],
+  hotels_stays: ['hotels_stays', 'Hotels & Stays'],
+  culture_heritage: ['culture_heritage', 'Culture & Heritage'],
+  business_services: ['business_services', 'Business Services'],
+  health_wellness: ['health_wellness', 'Health & Wellness'],
+  transport_mobility: ['transport_mobility', 'Transport & Mobility'],
+  public_essential: ['public_essential', 'Public & Essential'],
+};
+
+const resolveCategoryFilter = (value?: string) => {
+  if (!value || value === 'all') return undefined;
+  return categoryValueMap[value] || [value];
+};
 export const api = {
   async getBusinesses(params: {
     category?: string;
     city?: string;
     governorate?: string;
+    rating?: number;
     lastDoc?: number;
     limit?: number;
     featuredOnly?: boolean;
@@ -82,8 +100,9 @@ export const api = {
         .order('name', { ascending: true })
         .range(offset, end);
 
-      if (params.category && params.category !== 'all') {
-        query = query.eq('category', params.category);
+      const categoryFilter = resolveCategoryFilter(params.category);
+      if (categoryFilter) {
+        query = query.in('category', categoryFilter);
       }
 
       const governorateFilter = resolveGovernorateFilter(params.governorate);
@@ -97,7 +116,11 @@ export const api = {
 
       const searchStr = params.city?.trim();
       if (searchStr) {
-        query = query.ilike('city', `${searchStr}%`);
+        query = query.ilike('city', `%${searchStr}%`);
+      }
+
+      if (params.rating && params.rating > 0) {
+        query = query.gte('rating', params.rating);
       }
 
       const { data, error, count } = await query;

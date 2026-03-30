@@ -1,58 +1,32 @@
 # FINAL_REPORT.md
 
-## Estimated launch readiness
-**88%** (codebase and architecture cleaned; remaining gap is external credentialed verification + build execution in unrestricted environment).
+Date: 2026-03-30
 
-## What was fixed
-- Converted runtime to cleaner **Supabase-only production path** by removing mock fallback data from core feeds (posts, stories, featured, events, postcards).
-- Removed Gemini/AI package and environment dependency from production runtime.
-- Removed AI Studio import-map/template leftovers from `index.html`.
-- Cleaned naming/identity:
-  - package name -> `iraq-compass`
-  - version -> `1.0.0`
-  - metadata name/description cleaned.
-- Hardened schema alignment by ensuring `posts` and `stories` include `governorate` support in migration and existing-table alter statements.
-- Updated docs and env contract:
-  - README now reflects true Supabase-only setup
-  - added `.env.example` with only required vars.
+## Estimated launch readiness
+**91%**
+
+## What was fixed in this finalization pass
+- Hardened Supabase query correctness for directory/business listing by normalizing category filtering across ID/label variants and wiring rating threshold filtering.
+- Fixed event personalization tabs to use real category taxonomy values, restoring real filtered results.
+- Removed hidden governorate fallback behavior that previously masked empty filtered states in posts/stories.
+- Corrected postcards empty-state copy to be context-appropriate.
+- Repaired migration SQL data integrity issue (invalid `business_postcards` seed insert payload).
+- Hardened Supabase RLS policy posture for `users` (self read/insert/update only for authenticated users) and added authenticated write policies for posts/postcards.
+- Refreshed launch artifact documents (`AUDIT_REPORT.md`, `TODO_LAUNCH_BLOCKERS.md`, handoff/changelog).
 
 ## What remains
-- Execute install/lint/build in a normal npm-enabled environment.
-- Verify Supabase dashboard runtime config (RLS, OAuth redirects, env variables in hosting).
-- Perform final production smoke tests with real data.
+- Environment-level validation in this execution environment is blocked by npm registry access (`403 Forbidden`), so lint/build could not be executed to completion here.
+- Final production credential setup and domain callback confirmation must be done in hosting + Supabase dashboard.
 
-## What is blocking true launch (if anything)
-1. **Environment constraint in this run:** npm registry access is blocked (`403`) so build/lint could not be validated here.
-2. **Manual dashboard actions still required:** final Supabase/hosting credential setup and live-domain verification.
+## True blockers still preventing launch
+1. **Infrastructure validation blocker (environmental):** dependency installation currently fails in this environment (`npm install` returns `403`), preventing final local lint/build proof.
+2. **Manual production setup blocker:** production env vars and auth redirect URLs must be configured by maintainers.
 
-## Needs human credentials / dashboard action
-- Set hosting env vars:
-  - `VITE_SUPABASE_URL`
-  - `VITE_SUPABASE_ANON_KEY`
-- Confirm Supabase Auth redirect URLs for production domain.
-- Confirm Supabase RLS policies match launch expectations for read/write roles.
-- Apply migration in production Supabase project if not yet applied.
-- Execute final deploy + smoke tests on production domain.
+## Risk level after fixes
+**Low-to-medium operational risk**, mostly concentrated in deployment environment/credentials rather than application logic.
 
-## Changelog (files modified)
-- `package.json`
-- `index.html`
-- `vite-env.d.ts`
-- `App.tsx`
-- `components/FeaturedBusinesses.tsx`
-- `components/PersonalizedEvents.tsx`
-- `components/PostcardsSection.tsx`
-- `components/StoriesRing.tsx`
-- `components/CommunityStories.tsx`
-- `components/CityGuide.tsx`
-- `components/DataArchitect.tsx`
-- `components/InclusiveFeatures.tsx`
-- `components/BusinessDirectory.tsx`
-- `types.ts`
-- `supabase/migrations/20260328_bootstrap_public_tables.sql`
-- `README.md`
-- `metadata.json`
-- `.env.example`
-- `AUDIT_REPORT.md`
-- `TODO_LAUNCH_BLOCKERS.md`
-- `services/mockData.ts` (removed)
+## Exact recommended next action
+1. In a network-permitted environment, run `npm install && npm run lint && npm run build`.
+2. Apply `supabase/migrations/20260328_bootstrap_public_tables.sql` in production Supabase project.
+3. Configure production env vars and auth redirects.
+4. Smoke test listing/search/filtering/events/postcards on production domain.

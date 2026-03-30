@@ -34,7 +34,7 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selected
       }
     };
     fetchFeatured();
-  }, [selectedGovernorate]);
+  }, [selectedGovernorate, t]);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -90,7 +90,7 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({ selected
           ) : (
             businesses.map((business, index) => {
               const displayName = lang === 'ar' && business.nameAr ? business.nameAr : lang === 'ku' && business.nameKu ? business.nameKu : business.name;
-              const displayImage = business.coverImage || business.imageUrl || 'https://picsum.photos/seed/placeholder/600/400';
+              const displayImage = business.coverImage || business.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5';
               const isPremium = business.isPremium || business.isFeatured;
 
               return (

@@ -28,7 +28,7 @@ export const CommunityStories: React.FC<CommunityStoriesProps> = ({ selectedGove
         }
 
         const supabaseStories = data.filter((item: Story) => (item.governorate || '').toLowerCase() === selectedGovernorate);
-        setStories(supabaseStories.length > 0 ? supabaseStories : data);
+        setStories(supabaseStories);
       } catch (error) {
         console.error('Error fetching stories:', error);
         setStories([]);
@@ -38,7 +38,7 @@ export const CommunityStories: React.FC<CommunityStoriesProps> = ({ selectedGove
       }
     };
     fetchStories();
-  }, [selectedGovernorate]);
+  }, [selectedGovernorate, t]);
 
   if (isLoading) {
     return (

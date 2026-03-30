@@ -28,7 +28,7 @@ export const PostcardsSection: React.FC<PostcardsSectionProps> = ({ selectedGove
       }
     };
     void fetchCards();
-  }, [selectedGovernorate]);
+  }, [selectedGovernorate, t]);
 
   return (
     <section className="py-16" id="postcards-section">
@@ -38,7 +38,7 @@ export const PostcardsSection: React.FC<PostcardsSectionProps> = ({ selectedGove
           {error ? (
             <div className="col-span-full py-10 text-center text-red-300">{error}</div>
           ) : cards.length === 0 ? (
-            <div className="col-span-full py-10 text-center text-white/60">{t('stories.noStories')}</div>
+            <div className="col-span-full py-10 text-center text-white/60">{t('directory.noResultsDesc')}</div>
           ) : cards.map((card) => (
             <button key={card.id} onClick={() => setSelected(card)} className="text-start">
               <GlassCard className="p-0 overflow-hidden hover:border-primary/40 border-white/10 transition-all h-full">

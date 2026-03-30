@@ -158,8 +158,29 @@ create policy "public read events" on public.events
   for select to anon using (true);
 
 drop policy if exists "public read users" on public.users;
-create policy "public read users" on public.users
-  for select to anon using (true);
+drop policy if exists "users can read own profile" on public.users;
+create policy "users can read own profile" on public.users
+  for select to authenticated using (auth.uid()::text = id);
+
+drop policy if exists "users can insert own profile" on public.users;
+create policy "users can insert own profile" on public.users
+  for insert to authenticated with check (auth.uid()::text = id);
+
+drop policy if exists "users can update own profile" on public.users;
+create policy "users can update own profile" on public.users
+  for update to authenticated using (auth.uid()::text = id) with check (auth.uid()::text = id);
+
+drop policy if exists "authenticated can insert posts" on public.posts;
+create policy "authenticated can insert posts" on public.posts
+  for insert to authenticated with check (true);
+
+drop policy if exists "authenticated can insert postcards" on public.business_postcards;
+create policy "authenticated can insert postcards" on public.business_postcards
+  for insert to authenticated with check (true);
+
+drop policy if exists "authenticated can update postcards" on public.business_postcards;
+create policy "authenticated can update postcards" on public.business_postcards
+  for update to authenticated using (true) with check (true);
 
 drop policy if exists "public read business_postcards" on public.business_postcards;
 create policy "public read business_postcards" on public.business_postcards
@@ -326,8 +347,7 @@ values (
   'https://maps.google.com/?q=33.3090,44.4320',
   4.7,
   124,
-  true,
-  'Baghdad'
+  true
 )
 on conflict (id) do update
 set title = excluded.title,

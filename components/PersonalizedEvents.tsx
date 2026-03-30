@@ -24,9 +24,9 @@ export const PersonalizedEvents: React.FC<PersonalizedEventsProps> = ({ selected
       try {
         const categoryMap: Record<string, string | undefined> = {
           forYou: undefined,
-          trending: 'entertainment',
-          nearYou: 'food',
-          friendsGoing: 'business',
+          trending: 'events_entertainment',
+          nearYou: 'food_drink',
+          friendsGoing: 'business_services',
         };
         const governorate = selectedGovernorate !== 'all' ? selectedGovernorate : undefined;
         const data = await api.getEvents({ category: categoryMap[activeTab], governorate });
@@ -40,7 +40,7 @@ export const PersonalizedEvents: React.FC<PersonalizedEventsProps> = ({ selected
       }
     };
     fetchEvents();
-  }, [activeTab, selectedGovernorate]);
+  }, [activeTab, selectedGovernorate, t]);
 
   return (
     <section className="py-16" id="events-section">

@@ -18,7 +18,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
                       lang === 'ku' && business.nameKu ? business.nameKu : 
                       business.name;
                       
-  const displayImage = business.imageUrl || business.coverImage || 'https://picsum.photos/seed/placeholder/400/300';
+  const displayImage = business.imageUrl || business.coverImage || 'https://images.unsplash.com/photo-1483366774565-c783b9f70e2c';
   const displayReviews = business.reviewCount ?? 0;
   const isVerified = business.isVerified ?? false;
 
@@ -53,7 +53,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, viewMode }) => {
         <p className="text-white/60 text-sm mb-3">{t(categories.find(c => c.id === business.category)?.nameKey || business.category)}</p>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1"><Star className="w-4 h-4 text-accent fill-accent" /><span className="text-white font-medium">{business.rating}</span><span className="text-white/60 text-sm">({displayReviews})</span></div>
-          <div className="flex items-center gap-1 text-white/60 text-sm"><MapPin className="w-4 h-4" />{business.distance || '1.2'} km</div>
+          <div className="flex items-center gap-1 text-white/60 text-sm"><MapPin className="w-4 h-4" />{business.distance ? `${business.distance} km` : (business.city || t('directory.city'))}</div>
         </div>
         <button className="w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:shadow-glow-primary transition-all">{t('directory.viewProfile')}</button>
       </div>
@@ -99,6 +99,7 @@ export const BusinessDirectory: React.FC<BusinessDirectoryProps> = ({ initialFil
             category: filters.category,
             city: filters.city,
             governorate: filters.governorate,
+            rating: filters.rating,
             lastDoc: isLoadMore ? lastDoc : undefined,
             limit: pageSize
         });

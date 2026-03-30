@@ -1,44 +1,47 @@
 # AUDIT_REPORT.md
 
+Date: 2026-03-30
+
 ## Scope audited
-- Runtime app entry/routing and auth state: `App.tsx`
-- Package/build config: `package.json`, `vite.config.js`, `tsconfig.json`, `index.html`
-- Environment handling: `services/supabase.ts`, `vite-env.d.ts`, `.env.example`
-- API/data layer: `services/api.ts`, `supabase/migrations/20260328_bootstrap_public_tables.sql`
-- UI data consumers: `components/*`
-- Deployment scripts/docs: `README.md`, `scripts/preflight.sh`, `scripts/verify-deploy.sh`
+- Runtime entrypoints, routing shell, auth/session bootstrapping, and error boundary (`index.tsx`, `App.tsx`).
+- Supabase integration and data access (`services/supabase.ts`, `services/api.ts`).
+- Directory/listing/detail-adjacent flows across feature components.
+- Translations/constants, package/deploy scripts, metadata, migration SQL, and env docs.
 
-## Brutally honest diagnosis (before fixes)
+## Key findings (before remediation)
 
-1. **Production data path was contaminated by hardcoded mock business data.**
-   - Multiple core surfaces (posts, featured, stories, events, postcards) silently fell back to `services/mockData.ts` on empty/error states.
-   - This masked real Supabase failures and violated production-data integrity.
+### Critical blockers
+1. **Category filtering mismatch between frontend and Supabase data.**
+   - Frontend emitted category IDs (e.g., `food_drink`) while seeded/current DB values may be human-readable labels (e.g., `Food & Drink`).
+   - Result: listing/featured filtering could incorrectly return empty results.
 
-2. **AI/Gemini dependencies existed in production path.**
-   - `@google/genai` dependency and `VITE_GEMINI_API_KEY` were required/used by dashboard and city guide flows.
-   - This was not aligned with a Supabase-only backend direction and blocked installs in this environment due registry policy.
+2. **Event tab filtering used stale category keys.**
+   - `PersonalizedEvents` used categories like `entertainment`, `food`, `business` that do not match app taxonomy.
+   - Result: event tabs appeared broken despite existing rows.
 
-3. **Naming/identity still looked template-grade.**
-   - Package name/version were placeholders.
-   - Metadata had placeholder app name and "AI-powered" template phrasing.
-   - `index.html` still carried AI Studio import map leftovers.
+3. **SQL migration had invalid `business_postcards` seed insert values count.**
+   - Extra trailing value caused migration/application instability.
 
-4. **Schema/consumer mismatch existed for governorate filtering.**
-   - App filtered stories/posts by `governorate`, while migration tables for `posts` and `stories` originally did not guarantee this column.
+4. **RLS policy shape for `users` was unsafe and operationally incorrect.**
+   - `users` table had public read policy (data exposure risk), but no explicit self insert/update/read authenticated policies.
 
-5. **Deployment/readme instructions were partially misleading.**
-   - README still listed Gemini env vars and did not fully reflect cleaned Supabase-only launch path.
+### High-priority issues
+1. **Hidden fallback behavior for governorate filters.**
+   - Social posts/stories would silently fall back to global feed when no matching governorate rows existed.
+   - This masked true filtered state and could mislead users.
 
-## Current diagnosis (after fixes in this pass)
+2. **Rating filter in directory UI was not wired to Supabase query.**
+   - UI appeared functional but did not impact query results.
 
-- Supabase remains the only runtime backend.
-- Mock business fallback datasets were removed from runtime flow.
-- Gemini dependency and env usage were removed.
-- App/package naming and metadata are production-cleaned.
-- README/env docs now match runtime requirements.
-- Posts/stories governorate columns were aligned in migration for future deployments.
+3. **Misleading empty-state copy in postcards section.**
+   - Displayed stories empty-state text for postcards.
 
-## Remaining risk
+### Medium-priority cleanup
+1. Placeholder image fallback used generic random stock endpoint in critical cards.
+2. Existing reports/changelog files needed refresh to reflect current launch state after hardening.
 
-- **This environment cannot install npm dependencies due registry 403 policy**, so lint/build verification could not be completed here.
-- Final readiness depends on one external run with normal npm access (`npm install`, `npm run lint`, `npm run build`).
+## Findings that are already in good shape
+- Supabase-only runtime path is in place (`services/supabase.ts`, `services/api.ts`).
+- No Firebase code/dependency paths detected.
+- `.env.example` exists and reflects required Supabase client vars.
+- Scripts for preflight/deploy verification exist and are focused.

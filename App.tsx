@@ -207,8 +207,7 @@ const MainContent: React.FC = () => {
 
   const visiblePosts = React.useMemo(() => {
     if (selectedGovernorate === 'all') return posts;
-    const filtered = posts.filter((post) => (post.governorate || '').toLowerCase() === selectedGovernorate);
-    return filtered.length > 0 ? filtered : posts;
+    return posts.filter((post) => (post.governorate || '').toLowerCase() === selectedGovernorate);
   }, [posts, selectedGovernorate]);
 
   const handleJoinOwner = () => {
